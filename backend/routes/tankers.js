@@ -68,6 +68,66 @@ router.get('/allocations', authenticate, async (req, res, next) => {
   }
 });
 
+// Get tanker statistics (total, pending, in-progress, delivered)
+router.get('/statistics', authenticate, async (req, res, next) => {
+  try {
+    const { Op } = await import('sequelize');
+    
+    // Get all allocations
+    const allAllocations = await Allocation.findAll({
+      include: [
+        { model: Village, attributes: ['name', 'district'] },
+        { model: Tanker, attributes: ['registration_number', 'capacity'] }
+      ],
+      order: [['allocation_date', 'DESC']]
+    });
+
+    // Count by status
+    const totalSent = allAllocations.length;
+    const pending = allAllocations.filter(a => a.status === 'pending').length;
+    const inProgress = allAllocations.filter(a => a.status === 'in_progress').length;
+    const delivered = allAllocations.filter(a => a.status === 'completed').length;
+    const cancelled = allAllocations.filter(a => a.status === 'cancelled').length;
+
+    // Get recent allocations (last 10)
+    const recentAllocations = allAllocations.slice(0, 10);
+
+    // Get critical area allocations
+    const criticalAllocations = await Allocation.findAll({
+      where: {
+        status: { [Op.in]: ['pending', 'in_progress'] }
+      },
+      include: [
+        { 
+          model: Village, 
+          attributes: ['name', 'district', 'current_storage', 'storage_capacity'],
+          where: {
+            current_storage: {
+              [Op.lt]: sequelize.literal('storage_capacity * 0.3')
+            }
+          }
+        },
+        { model: Tanker, attributes: ['registration_number', 'capacity', 'status'] }
+      ],
+      order: [['allocation_date', 'DESC']]
+    });
+
+    res.json({
+      summary: {
+        totalSent,
+        pending,
+        inProgress,
+        delivered,
+        cancelled
+      },
+      recentAllocations,
+      criticalAllocations
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // Local user: get tanker allocations for their village
 router.get('/my-village', authenticate, async (req, res, next) => {
   try {

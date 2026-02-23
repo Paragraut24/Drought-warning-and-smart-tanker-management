@@ -22,6 +22,54 @@ router.get('/', authenticate, async (req, res, next) => {
   }
 });
 
+// Get villages with priority scores for map visualization
+router.get('/priority/all', authenticate, async (req, res, next) => {
+  try {
+    const villages = await Village.findAll({
+      attributes: [
+        'id', 'name', 'district', 'state', 'population',
+        'latitude', 'longitude', 'storage_capacity', 'current_storage'
+      ]
+    });
+
+    // Calculate priority score for each village
+    const villagesWithPriority = villages.map(village => {
+      const storagePercent = (village.current_storage / village.storage_capacity) * 100;
+      
+      // Priority calculation (0-100 scale)
+      // Lower storage = Higher priority
+      let priorityScore = 0;
+      
+      if (storagePercent < 20) {
+        priorityScore = 90 + (20 - storagePercent); // 90-100 (Critical)
+      } else if (storagePercent < 30) {
+        priorityScore = 75 + ((30 - storagePercent) * 1.5); // 75-90 (High)
+      } else if (storagePercent < 50) {
+        priorityScore = 35 + ((50 - storagePercent) * 2); // 35-75 (Medium)
+      } else {
+        priorityScore = Math.max(0, 35 - ((storagePercent - 50) * 0.7)); // 0-35 (Low)
+      }
+
+      return {
+        id: village.id,
+        name: village.name,
+        district: village.district,
+        state: village.state,
+        population: village.population,
+        latitude: parseFloat(village.latitude),
+        longitude: parseFloat(village.longitude),
+        storagePercent: parseFloat(storagePercent.toFixed(2)),
+        priorityScore: parseFloat(priorityScore.toFixed(2)),
+        category: priorityScore >= 75 ? 'critical' : priorityScore >= 35 ? 'alert' : 'normal'
+      };
+    });
+
+    res.json(villagesWithPriority);
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.get('/:id', authenticate, async (req, res, next) => {
   try {
     const village = await Village.findByPk(req.params.id);

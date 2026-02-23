@@ -27,6 +27,7 @@ export const authAPI = {
 export const villageAPI = {
   getAll: () => api.get('/villages'),
   getById: (id) => api.get(`/villages/${id}`),
+  getWithPriority: () => api.get('/villages/priority/all'),
   create: (data) => api.post('/villages', data),
   update: (id, data) => api.put(`/villages/${id}`, data),
   delete: (id) => api.delete(`/villages/${id}`)
@@ -57,6 +58,7 @@ export const tankerAPI = {
   delete: (id) => api.delete(`/tankers/${id}`),
   allocate: () => api.post('/tankers/allocate'),
   getAllocations: () => api.get('/tankers/allocations'),
+  getStatistics: () => api.get('/tankers/statistics'),
   getMyVillage: () => api.get('/tankers/my-village'),
   optimizeRoute: (data) => api.post('/tankers/optimize-route', data)
 };

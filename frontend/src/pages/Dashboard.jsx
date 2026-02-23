@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import { analysisAPI, villageAPI, alertAPI } from '../services/api';
+import TankerStatistics from '../components/TankerStatistics';
+import LeafletPriorityMap from '../components/LeafletPriorityMap';
 
 const Dashboard = () => {
   const [wsiData, setWsiData] = useState([]);
@@ -405,6 +407,26 @@ const Dashboard = () => {
             </p>
           </div>
         </div>
+      </motion.div>
+
+      {/* Tanker Statistics Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
+        <div className="mb-4">
+          <h2 className="text-2xl font-bold text-gray-800">Tanker Deployment Status</h2>
+          <p className="text-sm text-gray-500">टैंकर तैनाती स्थिति - Real-time Tracking</p>
+        </div>
+        <TankerStatistics />
+      </motion.div>
+
+      {/* Priority Map Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
+        <LeafletPriorityMap />
       </motion.div>
     </div>
   );
