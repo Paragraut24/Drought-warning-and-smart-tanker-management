@@ -5,7 +5,7 @@ import { authenticate, authorize } from '../middleware/auth.js';
 const router = express.Router();
 
 // Rainfall endpoints
-router.post('/rainfall', authenticate, authorize('admin', 'operator'), async (req, res, next) => {
+router.post('/rainfall', authenticate, authorize('admin'), async (req, res, next) => {
   try {
     const record = await RainfallRecord.create(req.body);
     res.status(201).json(record);
@@ -14,7 +14,7 @@ router.post('/rainfall', authenticate, authorize('admin', 'operator'), async (re
   }
 });
 
-router.post('/rainfall/bulk', authenticate, authorize('admin', 'operator'), async (req, res, next) => {
+router.post('/rainfall/bulk', authenticate, authorize('admin'), async (req, res, next) => {
   try {
     const records = await RainfallRecord.bulkCreate(req.body.records);
     res.status(201).json({ message: `Created ${records.length} records`, records });
@@ -36,7 +36,7 @@ router.get('/rainfall/:villageId', authenticate, async (req, res, next) => {
 });
 
 // Groundwater endpoints
-router.post('/groundwater', authenticate, authorize('admin', 'operator'), async (req, res, next) => {
+router.post('/groundwater', authenticate, authorize('admin'), async (req, res, next) => {
   try {
     const record = await GroundwaterRecord.create(req.body);
     res.status(201).json(record);
@@ -45,7 +45,7 @@ router.post('/groundwater', authenticate, authorize('admin', 'operator'), async 
   }
 });
 
-router.post('/groundwater/bulk', authenticate, authorize('admin', 'operator'), async (req, res, next) => {
+router.post('/groundwater/bulk', authenticate, authorize('admin'), async (req, res, next) => {
   try {
     const records = await GroundwaterRecord.bulkCreate(req.body.records);
     res.status(201).json({ message: `Created ${records.length} records`, records });

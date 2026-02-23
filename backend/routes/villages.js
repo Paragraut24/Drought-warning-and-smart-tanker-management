@@ -4,7 +4,7 @@ import { authenticate, authorize } from '../middleware/auth.js';
 
 const router = express.Router();
 
-router.post('/', authenticate, authorize('admin', 'operator'), async (req, res, next) => {
+router.post('/', authenticate, authorize('admin'), async (req, res, next) => {
   try {
     const village = await Village.create(req.body);
     res.status(201).json(village);
@@ -34,7 +34,7 @@ router.get('/:id', authenticate, async (req, res, next) => {
   }
 });
 
-router.put('/:id', authenticate, authorize('admin', 'operator'), async (req, res, next) => {
+router.put('/:id', authenticate, authorize('admin'), async (req, res, next) => {
   try {
     const village = await Village.findByPk(req.params.id);
     if (!village) {
@@ -42,6 +42,19 @@ router.put('/:id', authenticate, authorize('admin', 'operator'), async (req, res
     }
     await village.update(req.body);
     res.json(village);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.delete('/:id', authenticate, authorize('admin'), async (req, res, next) => {
+  try {
+    const village = await Village.findByPk(req.params.id);
+    if (!village) {
+      return res.status(404).json({ error: 'Village not found' });
+    }
+    await village.destroy();
+    res.json({ message: 'Village deleted successfully' });
   } catch (error) {
     next(error);
   }

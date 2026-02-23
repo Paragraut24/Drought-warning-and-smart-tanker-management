@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import DataUpload from './pages/DataUpload';
@@ -8,51 +10,115 @@ import AllocationPanel from './pages/AllocationPanel';
 import RouteOptimization from './pages/RouteOptimization';
 import Alerts from './pages/Alerts';
 import Sidebar from './components/Sidebar';
+import LocalDashboard from './pages/local/LocalDashboard';
+import MyVillageData from './pages/local/MyVillageData';
+import TrackTankers from './pages/local/TrackTankers';
+import ReportShortage from './pages/local/ReportShortage';
+import MyAlerts from './pages/local/MyAlerts';
 
-function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+function AppContent() {
+  const { isAuthenticated, isAdmin, loading } = useAuth();
 
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    setIsAuthenticated(!!token);
-  }, []);
-
-  const handleLogin = () => {
-    setIsAuthenticated(true);
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    setIsAuthenticated(false);
-  };
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="w-16 h-16 mx-auto mb-4 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-gray-600 font-medium">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
     return (
-      <Router>
-        <Routes>
-          <Route path="/login" element={<Login onLogin={handleLogin} />} />
-          <Route path="*" element={<Navigate to="/login" />} />
-        </Routes>
-      </Router>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="*" element={<Navigate to="/login" />} />
+      </Routes>
     );
   }
 
   return (
-    <Router>
-      <div className="flex min-h-screen bg-gray-50">
-        <Sidebar onLogout={handleLogout} />
-        <div className="flex-1 p-8 overflow-auto">
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/upload" element={<DataUpload />} />
-            <Route path="/heatmap" element={<HeatmapView />} />
-            <Route path="/allocation" element={<AllocationPanel />} />
-            <Route path="/routes" element={<RouteOptimization />} />
-            <Route path="/alerts" element={<Alerts />} />
-            <Route path="*" element={<Navigate to="/" />} />
-          </Routes>
-        </div>
+    <div className="flex min-h-screen bg-gray-50">
+      <Sidebar />
+      <div className="flex-1 p-8 overflow-auto">
+        <Routes>
+          {/* Admin Routes */}
+          <Route path="/" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <Dashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/upload" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <DataUpload />
+            </ProtectedRoute>
+          } />
+          <Route path="/heatmap" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <HeatmapView />
+            </ProtectedRoute>
+          } />
+          <Route path="/allocation" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AllocationPanel />
+            </ProtectedRoute>
+          } />
+          <Route path="/routes" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <RouteOptimization />
+            </ProtectedRoute>
+          } />
+          <Route path="/alerts" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <Alerts />
+            </ProtectedRoute>
+          } />
+
+          {/* Local User Routes */}
+          <Route path="/local" element={
+            <ProtectedRoute allowedRoles={['local_user']}>
+              <LocalDashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/local/village" element={
+            <ProtectedRoute allowedRoles={['local_user']}>
+              <MyVillageData />
+            </ProtectedRoute>
+          } />
+          <Route path="/local/tankers" element={
+            <ProtectedRoute allowedRoles={['local_user']}>
+              <TrackTankers />
+            </ProtectedRoute>
+          } />
+          <Route path="/local/report" element={
+            <ProtectedRoute allowedRoles={['local_user']}>
+              <ReportShortage />
+            </ProtectedRoute>
+          } />
+          <Route path="/local/alerts" element={
+            <ProtectedRoute allowedRoles={['local_user']}>
+              <MyAlerts />
+            </ProtectedRoute>
+          } />
+
+          {/* Fallback redirect based on role */}
+          <Route path="*" element={
+            <Navigate to={isAdmin ? '/' : '/local'} replace />
+          } />
+        </Routes>
       </div>
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
     </Router>
   );
 }

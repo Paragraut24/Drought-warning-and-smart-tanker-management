@@ -19,14 +19,17 @@ api.interceptors.request.use((config) => {
 
 export const authAPI = {
   login: (credentials) => api.post('/auth/login', credentials),
-  register: (userData) => api.post('/auth/register', userData)
+  register: (userData) => api.post('/auth/register', userData),
+  getVillages: () => api.get('/auth/villages'),
+  getMe: () => api.get('/auth/me')
 };
 
 export const villageAPI = {
   getAll: () => api.get('/villages'),
   getById: (id) => api.get(`/villages/${id}`),
   create: (data) => api.post('/villages', data),
-  update: (id, data) => api.put(`/villages/${id}`, data)
+  update: (id, data) => api.put(`/villages/${id}`, data),
+  delete: (id) => api.delete(`/villages/${id}`)
 };
 
 export const dataAPI = {
@@ -51,16 +54,27 @@ export const tankerAPI = {
   getAll: () => api.get('/tankers'),
   create: (data) => api.post('/tankers', data),
   update: (id, data) => api.put(`/tankers/${id}`, data),
+  delete: (id) => api.delete(`/tankers/${id}`),
   allocate: () => api.post('/tankers/allocate'),
   getAllocations: () => api.get('/tankers/allocations'),
+  getMyVillage: () => api.get('/tankers/my-village'),
   optimizeRoute: (data) => api.post('/tankers/optimize-route', data)
 };
 
 export const alertAPI = {
   getAll: () => api.get('/alerts'),
   getActive: () => api.get('/alerts/active'),
+  getMyVillage: () => api.get('/alerts/my-village'),
   create: (data) => api.post('/alerts', data),
-  resolve: (id) => api.put(`/alerts/${id}/resolve`)
+  resolve: (id) => api.put(`/alerts/${id}/resolve`),
+  delete: (id) => api.delete(`/alerts/${id}`)
+};
+
+export const reportAPI = {
+  submit: (data) => api.post('/reports/water-shortage', data),
+  getMyReports: () => api.get('/reports/my-reports'),
+  getAll: () => api.get('/reports/all'),
+  updateStatus: (id, status) => api.put(`/reports/${id}/status`, { status })
 };
 
 export default api;

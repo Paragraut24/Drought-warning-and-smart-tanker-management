@@ -6,6 +6,7 @@ const AllocationPanel = () => {
   const [allocations, setAllocations] = useState([]);
   const [tankers, setTankers] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [pageLoading, setPageLoading] = useState(true);
   const [message, setMessage] = useState('');
 
   useEffect(() => {
@@ -14,14 +15,28 @@ const AllocationPanel = () => {
 
   const loadData = async () => {
     try {
+      setPageLoading(true);
       const [allocRes, tankerRes] = await Promise.all([
         tankerAPI.getAllocations(),
         tankerAPI.getAll()
       ]);
-      setAllocations(allocRes.data);
-      setTankers(tankerRes.data);
+      
+      // Ensure data is valid
+      const validAllocations = (allocRes.data || []).map(alloc => ({
+        ...alloc,
+        priority_score: alloc.priority_score ? parseFloat(alloc.priority_score) : 0,
+        status: alloc.status || 'pending',
+        createdAt: alloc.createdAt || new Date().toISOString()
+      }));
+      
+      setAllocations(validAllocations);
+      setTankers(tankerRes.data || []);
     } catch (error) {
       console.error('Failed to load data:', error);
+      setAllocations([]);
+      setTankers([]);
+    } finally {
+      setPageLoading(false);
     }
   };
 
@@ -30,10 +45,12 @@ const AllocationPanel = () => {
     setMessage('');
     try {
       const response = await tankerAPI.allocate();
-      setMessage(response.data.message);
-      loadData();
+      setMessage(response.data.message || '✅ Tankers allocated successfully!');
+      await loadData();
     } catch (error) {
-      setMessage('Allocation failed: ' + (error.response?.data?.error || error.message));
+      console.error('Allocation error:', error);
+      const errorMsg = error.response?.data?.error || error.message || 'Allocation failed';
+      setMessage(`❌ Allocation failed: ${errorMsg}`);
     } finally {
       setLoading(false);
     }
@@ -41,15 +58,25 @@ const AllocationPanel = () => {
 
   return (
     <div>
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-8"
-      >
-        <h1 className="text-4xl font-bold text-gray-800 mb-2">Water Tanker Allocation</h1>
-        <p className="text-gray-600">पानी टैंकर आवंटन - AI-powered smart allocation for critical villages</p>
-      </motion.div>
+      {/* Loading State */}
+      {pageLoading ? (
+        <div className="flex items-center justify-center h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading allocation data...</p>
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Header */}
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8"
+          >
+            <h1 className="text-4xl font-bold text-gray-800 mb-2">Water Tanker Allocation</h1>
+            <p className="text-gray-600">पानी टैंकर आवंटन - AI-powered smart allocation for critical villages</p>
+          </motion.div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
@@ -199,7 +226,7 @@ const AllocationPanel = () => {
                     <td className="p-4 text-gray-600">{alloc.Tanker?.registration_number || 'N/A'}</td>
                     <td className="p-4">
                       <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-semibold">
-                        {alloc.priority_score?.toFixed(1) || 'N/A'}
+                        {alloc.priority_score ? parseFloat(alloc.priority_score).toFixed(1) : 'N/A'}
                       </span>
                     </td>
                     <td className="p-4">
@@ -208,11 +235,11 @@ const AllocationPanel = () => {
                         alloc.status === 'in_progress' ? 'bg-blue-100 text-blue-700' :
                         'bg-yellow-100 text-yellow-700'
                       }`}>
-                        {alloc.status?.replace('_', ' ').toUpperCase() || 'PENDING'}
+                        {alloc.status ? alloc.status.replace('_', ' ').toUpperCase() : 'PENDING'}
                       </span>
                     </td>
                     <td className="p-4 text-sm text-gray-500">
-                      {new Date(alloc.createdAt).toLocaleDateString('en-IN')}
+                      {alloc.createdAt ? new Date(alloc.createdAt).toLocaleDateString('en-IN') : 'N/A'}
                     </td>
                   </motion.tr>
                 ))}
@@ -227,6 +254,8 @@ const AllocationPanel = () => {
           </div>
         )}
       </motion.div>
+        </>
+      )}
     </div>
   );
 };

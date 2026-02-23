@@ -28,53 +28,90 @@ export class AllocationService {
   }
 
   static async allocateTankers() {
-    // Get all available tankers
-    const availableTankers = await Tanker.findAll({
-      where: { status: 'available' }
-    });
-
-    if (availableTankers.length === 0) {
-      return { message: 'No tankers available', allocations: [] };
-    }
-
-    // Get all villages with priority scores
-    const villages = await Village.findAll();
-    const priorities = await Promise.all(
-      villages.map(v => this.calculatePriority(v.id))
-    );
-
-    // Sort by priority (highest first)
-    priorities.sort((a, b) => b.priority - a.priority);
-
-    // Allocate tankers to highest priority villages
-    const allocations = [];
-    for (let i = 0; i < Math.min(availableTankers.length, priorities.length); i++) {
-      const tanker = availableTankers[i];
-      const village = priorities[i];
-
-      const allocation = await Allocation.create({
-        village_id: village.villageId,
-        tanker_id: tanker.id,
-        priority_score: village.priority,
-        status: 'pending'
+    try {
+      // Get all available tankers
+      const availableTankers = await Tanker.findAll({
+        where: { status: 'available' }
       });
 
-      // Update tanker status
-      await tanker.update({ status: 'assigned' });
+      if (availableTankers.length === 0) {
+        return { 
+          success: false,
+          message: 'No tankers available for allocation', 
+          allocations: [] 
+        };
+      }
 
-      allocations.push({
-        allocationId: allocation.id,
-        tankerId: tanker.id,
-        tankerRegistration: tanker.registration_number,
-        villageId: village.villageId,
-        priorityScore: village.priority
-      });
+      // Get all villages with priority scores
+      const villages = await Village.findAll();
+      
+      if (villages.length === 0) {
+        return {
+          success: false,
+          message: 'No villages found in database',
+          allocations: []
+        };
+      }
+
+      const priorities = [];
+      for (const village of villages) {
+        try {
+          const priority = await this.calculatePriority(village.id);
+          priorities.push(priority);
+        } catch (error) {
+          console.error(`Error calculating priority for village ${village.id}:`, error.message);
+          // Continue with other villages
+        }
+      }
+
+      if (priorities.length === 0) {
+        return {
+          success: false,
+          message: 'Could not calculate priorities for any village',
+          allocations: []
+        };
+      }
+
+      // Sort by priority (highest first)
+      priorities.sort((a, b) => b.priority - a.priority);
+
+      // Allocate tankers to highest priority villages
+      const allocations = [];
+      const numAllocations = Math.min(availableTankers.length, priorities.length);
+      
+      for (let i = 0; i < numAllocations; i++) {
+        const tanker = availableTankers[i];
+        const village = priorities[i];
+
+        const allocation = await Allocation.create({
+          village_id: village.villageId,
+          tanker_id: tanker.id,
+          priority_score: village.priority,
+          status: 'pending',
+          allocation_date: new Date()
+        });
+
+        // Update tanker status
+        await tanker.update({ status: 'assigned' });
+
+        allocations.push({
+          allocationId: allocation.id,
+          tankerId: tanker.id,
+          tankerRegistration: tanker.registration_number,
+          villageId: village.villageId,
+          priorityScore: village.priority
+        });
+      }
+
+      return {
+        success: true,
+        message: `Successfully allocated ${allocations.length} tanker(s) to critical villages`,
+        allocations
+      };
+    } catch (error) {
+      console.error('Allocation error:', error);
+      throw new Error(`Allocation failed: ${error.message}`);
     }
-
-    return {
-      message: `Allocated ${allocations.length} tankers`,
-      allocations
-    };
   }
 
   static async getAllocations() {

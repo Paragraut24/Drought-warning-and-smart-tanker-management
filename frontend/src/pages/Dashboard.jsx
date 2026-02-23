@@ -51,30 +51,101 @@ const Dashboard = () => {
   return (
     <div className="space-y-6">
       {/* Hero Section */}
-      <div className="hero-section relative text-white p-12 rounded-2xl">
+      <div className="hero-section relative text-white p-12 rounded-2xl overflow-hidden shadow-2xl">
+        {/* Background Image with Overlay */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center"
+          style={{
+            backgroundImage: `url('https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=1920&q=80')`,
+          }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-900/95 via-blue-800/90 to-purple-900/95"></div>
+          {/* Animated water drops effect */}
+          <div className="absolute inset-0 opacity-20">
+            <div className="absolute top-10 left-10 w-2 h-2 bg-white rounded-full animate-ping"></div>
+            <div className="absolute top-20 right-20 w-3 h-3 bg-blue-300 rounded-full animate-pulse"></div>
+            <div className="absolute bottom-20 left-1/4 w-2 h-2 bg-white rounded-full animate-ping" style={{ animationDelay: '1s' }}></div>
+            <div className="absolute top-1/3 right-1/3 w-2 h-2 bg-blue-200 rounded-full animate-pulse" style={{ animationDelay: '2s' }}></div>
+          </div>
+        </div>
+        
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="relative z-10"
         >
-          <h1 className="text-5xl font-bold mb-2">JalRakshak AI Dashboard</h1>
-          <p className="text-2xl mb-4">जल रक्षक - विदर्भ जल संकट प्रबंधन</p>
-          <p className="text-xl opacity-90">Real-time water crisis monitoring for Vidarbha region</p>
-          <div className="mt-4 flex gap-6 text-sm">
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></span>
-              <span>Live Monitoring Active</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span>🌡️</span>
-              <span>Drought Detection Enabled</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span>🤖</span>
-              <span>AI Predictions Running</span>
+          <div className="flex items-center gap-4 mb-6">
+            <motion.div 
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.2, type: 'spring' }}
+              className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-lg"
+            >
+              <span className="text-5xl">💧</span>
+            </motion.div>
+            <div>
+              <motion.h1 
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 }}
+                className="text-5xl font-bold mb-2 drop-shadow-lg"
+              >
+                JalRakshak AI Dashboard
+              </motion.h1>
+              <motion.p 
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.4 }}
+                className="text-2xl opacity-90 drop-shadow"
+              >
+                जल रक्षक - विदर्भ जल संकट प्रबंधन
+              </motion.p>
             </div>
           </div>
+          
+          <motion.p 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="text-xl opacity-90 mb-6 drop-shadow"
+          >
+            Real-time water crisis monitoring for Vidarbha region
+          </motion.p>
+          
+          <div className="flex flex-wrap gap-4 text-sm">
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6 }}
+              className="flex items-center gap-2 bg-white/15 backdrop-blur-md px-5 py-3 rounded-full border border-white/20 shadow-lg hover:bg-white/25 transition-all"
+            >
+              <span className="w-3 h-3 bg-green-400 rounded-full animate-pulse shadow-lg shadow-green-400/50"></span>
+              <span className="font-semibold">Live Monitoring Active</span>
+            </motion.div>
+            
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.7 }}
+              className="flex items-center gap-2 bg-white/15 backdrop-blur-md px-5 py-3 rounded-full border border-white/20 shadow-lg hover:bg-white/25 transition-all"
+            >
+              <span className="text-xl">🌡️</span>
+              <span className="font-semibold">Drought Detection Enabled</span>
+            </motion.div>
+            
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.8 }}
+              className="flex items-center gap-2 bg-white/15 backdrop-blur-md px-5 py-3 rounded-full border border-white/20 shadow-lg hover:bg-white/25 transition-all"
+            >
+              <span className="text-xl">🤖</span>
+              <span className="font-semibold">AI Predictions Running</span>
+            </motion.div>
+          </div>
         </motion.div>
+        
+        {/* Wave separator */}
         <div className="hero-wave"></div>
       </div>
 
