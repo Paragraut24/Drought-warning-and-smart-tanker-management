@@ -15,19 +15,31 @@ const Dashboard = () => {
 
   const loadData = async () => {
     try {
-      const [wsiRes, alertRes] = await Promise.all([
+      const [wsiRes, allAlertsRes] = await Promise.all([
         analysisAPI.getAllWSI(),
-        alertAPI.getActive()
+        alertAPI.getAll({})
       ]);
 
       setWsiData(wsiRes.data);
-      setAlerts(alertRes.data);
+      
+      // Get all alerts (resolved and unresolved)
+      const allAlerts = allAlertsRes.data || [];
+      
+      // Filter active (unresolved) alerts
+      const activeAlerts = allAlerts.filter(a => !a.is_resolved);
+      setAlerts(activeAlerts);
 
-      const critical = wsiRes.data.filter(v => v.severity === 'critical').length;
-      const alert = wsiRes.data.filter(v => v.severity === 'alert').length;
-      const normal = wsiRes.data.filter(v => v.severity === 'normal').length;
+      // Count alerts by severity (only unresolved)
+      const critical = activeAlerts.filter(a => a.severity === 'critical').length;
+      const alert = activeAlerts.filter(a => a.severity === 'alert').length;
+      const normal = activeAlerts.filter(a => a.severity === 'normal').length;
 
-      setStats({ total: wsiRes.data.length, critical, alert, normal });
+      setStats({ 
+        total: wsiRes.data.length, 
+        critical, 
+        alert, 
+        normal 
+      });
     } catch (error) {
       console.error('Failed to load data:', error);
     } finally {
@@ -174,24 +186,24 @@ const Dashboard = () => {
             desc: 'Vidarbha Region'
           },
           {
-            label: 'Critical Status',
-            sublabel: 'गंभीर स्थिति',
+            label: 'Critical Alerts',
+            sublabel: 'गंभीर अलर्ट',
             value: stats.critical,
             gradient: 'from-red-500 to-red-600',
             icon: '🚨',
             desc: 'Immediate Action'
           },
           {
-            label: 'Alert Status',
-            sublabel: 'चेतावनी',
+            label: 'Alert Warnings',
+            sublabel: 'चेतावनी अलर्ट',
             value: stats.alert,
             gradient: 'from-yellow-500 to-yellow-600',
             icon: '⚠️',
             desc: 'Monitor Closely'
           },
           {
-            label: 'Normal Status',
-            sublabel: 'सामान्य',
+            label: 'Normal Alerts',
+            sublabel: 'सामान्य अलर्ट',
             value: stats.normal,
             gradient: 'from-green-500 to-green-600',
             icon: '✅',
