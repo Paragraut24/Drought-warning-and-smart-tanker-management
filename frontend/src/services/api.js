@@ -58,6 +58,7 @@ export const tankerAPI = {
   delete: (id) => api.delete(`/tankers/${id}`),
   allocate: () => api.post('/tankers/allocate'),
   getAllocations: () => api.get('/tankers/allocations'),
+  cancelAllocation: (id) => api.delete(`/tankers/allocations/${id}`),
   getStatistics: () => api.get('/tankers/statistics'),
   getMyVillage: () => api.get('/tankers/my-village'),
   optimizeRoute: (data) => api.post('/tankers/optimize-route', data)

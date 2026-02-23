@@ -68,6 +68,35 @@ router.get('/allocations', authenticate, async (req, res, next) => {
   }
 });
 
+// Cancel allocation and free up tanker
+router.delete('/allocations/:id', authenticate, authorize('admin'), async (req, res, next) => {
+  try {
+    const allocation = await Allocation.findByPk(req.params.id, {
+      include: [Tanker, Village]
+    });
+    
+    if (!allocation) {
+      return res.status(404).json({ error: 'Allocation not found' });
+    }
+
+    // Set tanker back to available
+    if (allocation.Tanker) {
+      await allocation.Tanker.update({ status: 'available' });
+    }
+
+    // Delete the allocation entry
+    await allocation.destroy();
+
+    res.json({ 
+      message: 'Allocation cancelled and entry deleted successfully',
+      tanker: allocation.Tanker?.registration_number,
+      village: allocation.Village?.name
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // Get tanker statistics (total, pending, in-progress, delivered)
 router.get('/statistics', authenticate, async (req, res, next) => {
   try {

@@ -8,6 +8,8 @@ const AllocationPanel = () => {
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
   const [message, setMessage] = useState('');
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [allocationToCancel, setAllocationToCancel] = useState(null);
 
   useEffect(() => {
     loadData();
@@ -37,6 +39,30 @@ const AllocationPanel = () => {
       setTankers([]);
     } finally {
       setPageLoading(false);
+    }
+  };
+
+  const handleCancelAllocation = async (allocationId) => {
+    setAllocationToCancel(allocationId);
+    setShowConfirm(true);
+  };
+
+  const confirmCancel = async () => {
+    if (!allocationToCancel) return;
+    
+    try {
+      await tankerAPI.cancelAllocation(allocationToCancel);
+      setMessage('✅ Allocation cancelled and entry deleted successfully!');
+      setShowConfirm(false);
+      setAllocationToCancel(null);
+      await loadData();
+      setTimeout(() => setMessage(''), 3000);
+    } catch (error) {
+      console.error('Cancel error:', error);
+      setMessage(`❌ Failed to cancel allocation: ${error.response?.data?.error || error.message}`);
+      setShowConfirm(false);
+      setAllocationToCancel(null);
+      setTimeout(() => setMessage(''), 3000);
     }
   };
 
@@ -207,9 +233,9 @@ const AllocationPanel = () => {
                   <th className="text-left p-4 font-semibold text-gray-700">Village</th>
                   <th className="text-left p-4 font-semibold text-gray-700">District</th>
                   <th className="text-left p-4 font-semibold text-gray-700">Tanker</th>
-                  <th className="text-left p-4 font-semibold text-gray-700">Priority</th>
                   <th className="text-left p-4 font-semibold text-gray-700">Status</th>
                   <th className="text-left p-4 font-semibold text-gray-700">Allocated</th>
+                  <th className="text-left p-4 font-semibold text-gray-700">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -222,12 +248,12 @@ const AllocationPanel = () => {
                     className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
                   >
                     <td className="p-4 font-medium text-gray-800">{alloc.Village?.name || 'N/A'}</td>
-                    <td className="p-4 text-gray-600">{alloc.Village?.district || 'N/A'}</td>
-                    <td className="p-4 text-gray-600">{alloc.Tanker?.registration_number || 'N/A'}</td>
+                    <td className="p-4 text-gray-600">📍 {alloc.Village?.district || 'N/A'}</td>
                     <td className="p-4">
-                      <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-semibold">
-                        {alloc.priority_score ? parseFloat(alloc.priority_score).toFixed(1) : 'N/A'}
-                      </span>
+                      <div>
+                        <p className="text-gray-800 font-medium">{alloc.Tanker?.registration_number || 'N/A'}</p>
+                        <p className="text-xs text-gray-500">{alloc.Tanker?.capacity ? `${alloc.Tanker.capacity}L` : ''}</p>
+                      </div>
                     </td>
                     <td className="p-4">
                       <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
@@ -235,11 +261,23 @@ const AllocationPanel = () => {
                         alloc.status === 'in_progress' ? 'bg-blue-100 text-blue-700' :
                         'bg-yellow-100 text-yellow-700'
                       }`}>
-                        {alloc.status ? alloc.status.replace('_', ' ').toUpperCase() : 'PENDING'}
+                        {alloc.status === 'pending' ? '✓ Allocated' : 
+                         alloc.status === 'in_progress' ? '🚛 In Progress' :
+                         '✅ Completed'}
                       </span>
                     </td>
                     <td className="p-4 text-sm text-gray-500">
                       {alloc.createdAt ? new Date(alloc.createdAt).toLocaleDateString('en-IN') : 'N/A'}
+                    </td>
+                    <td className="p-4">
+                      {alloc.status !== 'completed' && (
+                        <button
+                          onClick={() => handleCancelAllocation(alloc.id)}
+                          className="px-3 py-1 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-sm font-medium"
+                        >
+                          Cancel
+                        </button>
+                      )}
                     </td>
                   </motion.tr>
                 ))}
@@ -254,6 +292,44 @@ const AllocationPanel = () => {
           </div>
         )}
       </motion.div>
+
+      {/* Custom Confirmation Dialog */}
+      {showConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-xl p-6 max-w-md mx-4 shadow-2xl"
+          >
+            <div className="text-center">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-3xl">⚠️</span>
+              </div>
+              <h3 className="text-xl font-bold text-gray-800 mb-2">Cancel Allocation?</h3>
+              <p className="text-gray-600 mb-6">
+                Are you sure you want to cancel this tanker allocation? This action will delete the entry and free up the tanker.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowConfirm(false);
+                    setAllocationToCancel(null);
+                  }}
+                  className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+                >
+                  No, Keep It
+                </button>
+                <button
+                  onClick={confirmCancel}
+                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+                >
+                  Yes, Cancel
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
         </>
       )}
     </div>
