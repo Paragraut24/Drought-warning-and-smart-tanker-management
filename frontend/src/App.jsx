@@ -39,9 +39,9 @@ function App() {
 
   return (
     <Router>
-      <div className="flex min-h-screen">
+      <div className="flex min-h-screen bg-gray-50">
         <Sidebar onLogout={handleLogout} />
-        <div className="flex-1 p-8">
+        <div className="flex-1 p-8 overflow-auto">
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/upload" element={<DataUpload />} />

@@ -1,5 +1,6 @@
 import { RainfallRecord, GroundwaterRecord } from '../models/index.js';
 import { Op } from 'sequelize';
+import sequelize from '../config/database.js';
 
 export class DroughtEngine {
   
@@ -7,34 +8,37 @@ export class DroughtEngine {
     const currentYear = new Date(currentDate).getFullYear();
     const currentMonth = new Date(currentDate).getMonth() + 1;
 
-    // Get current rainfall
+    // Get current year rainfall (last 6 months)
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    
     const currentRainfall = await RainfallRecord.sum('rainfall_mm', {
       where: {
         village_id: villageId,
         record_date: {
-          [Op.gte]: new Date(currentYear, currentMonth - 1, 1),
-          [Op.lt]: new Date(currentYear, currentMonth, 1)
+          [Op.gte]: sixMonthsAgo
         },
         is_historical: false
       }
     }) || 0;
 
-    // Get historical average for same month
-    const historicalAvg = await RainfallRecord.findAll({
+    // Get historical average for same period
+    const historicalRainfall = await RainfallRecord.sum('rainfall_mm', {
       where: {
         village_id: villageId,
-        is_historical: true,
-        record_date: {
-          [Op.and]: [
-            { [Op.gte]: new Date(2000, currentMonth - 1, 1) },
-            { [Op.lt]: new Date(2000, currentMonth, 1) }
-          ]
-        }
-      },
-      attributes: [[sequelize.fn('AVG', sequelize.col('rainfall_mm')), 'avg_rainfall']]
+        is_historical: true
+      }
+    }) || 0;
+    
+    // Calculate average per month from historical data
+    const historicalCount = await RainfallRecord.count({
+      where: {
+        village_id: villageId,
+        is_historical: true
+      }
     });
-
-    const historicalValue = historicalAvg[0]?.dataValues?.avg_rainfall || 0;
+    
+    const historicalValue = historicalCount > 0 ? (historicalRainfall / historicalCount) * 6 : 0;
 
     if (historicalValue === 0) {
       return { deviation: 0, current: currentRainfall, historical: 0 };
@@ -60,11 +64,14 @@ export class DroughtEngine {
       return { trend: 0, slope: 0, records: records.length };
     }
 
+    // Reverse to get chronological order
+    const chronological = records.reverse();
+
     // Calculate linear regression slope
-    const n = records.length;
+    const n = chronological.length;
     let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
 
-    records.forEach((record, index) => {
+    chronological.forEach((record, index) => {
       const x = index;
       const y = parseFloat(record.water_level);
       sumX += x;
@@ -75,8 +82,9 @@ export class DroughtEngine {
 
     const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
     
-    // Positive slope means water level is declining (worse)
-    const trendScore = Math.min(100, Math.max(0, slope * 10));
+    // Positive slope means water level is increasing (going deeper - worse)
+    // Normalize to 0-100 scale
+    const trendScore = Math.min(100, Math.max(0, slope * 20));
 
     return {
       trend: trendScore,

@@ -1,0 +1,233 @@
+import sequelize from './config/database.js';
+import { User, Village, RainfallRecord, GroundwaterRecord, Tanker, Alert } from './models/index.js';
+import bcrypt from 'bcryptjs';
+
+async function seedDatabase() {
+  try {
+    console.log('🌱 Starting database seeding...\n');
+
+    // Sync database
+    await sequelize.sync({ force: false });
+    console.log('✅ Database synced\n');
+
+    // Check if villages already exist
+    const villageCount = await Village.count();
+    if (villageCount > 0) {
+      console.log('⚠️  Database already has villages. Skipping seed.');
+      console.log('   To reseed, delete all data first or use force: true\n');
+      return;
+    }
+
+    // 1. Create additional users if needed
+    console.log('👥 Checking users...');
+    const existingUsers = await User.count();
+    if (existingUsers === 0) {
+      const users = await User.bulkCreate([
+        {
+          username: 'admin',
+          email: 'admin@water.gov',
+          password: await bcrypt.hash('admin123', 10),
+          role: 'admin'
+        },
+        {
+          username: 'operator1',
+          email: 'operator@water.gov',
+          password: await bcrypt.hash('operator123', 10),
+          role: 'operator'
+        },
+        {
+          username: 'viewer1',
+          email: 'viewer@water.gov',
+          password: await bcrypt.hash('viewer123', 10),
+          role: 'viewer'
+        }
+      ]);
+      console.log(`✅ Created ${users.length} users\n`);
+    } else {
+      console.log(`✅ Users already exist (${existingUsers})\n`);
+    }
+
+    // 2. Create Villages (Vidarbha Region - Maharashtra)
+    console.log('🏘️  Creating Vidarbha region villages...');
+    const villages = await Village.bulkCreate([
+      // Critical villages (high population, low storage) - Vidarbha
+      { name: 'Yavatmal', district: 'Yavatmal', state: 'Maharashtra', population: 28000, latitude: 20.3974, longitude: 78.1320, storage_capacity: 1200000, current_storage: 240000 },
+      { name: 'Wardha', district: 'Wardha', state: 'Maharashtra', population: 25000, latitude: 20.7453, longitude: 78.6022, storage_capacity: 1000000, current_storage: 200000 },
+      { name: 'Washim', district: 'Washim', state: 'Maharashtra', population: 22000, latitude: 20.1097, longitude: 77.1350, storage_capacity: 900000, current_storage: 180000 },
+      
+      // Alert villages (medium risk) - Vidarbha
+      { name: 'Akola', district: 'Akola', state: 'Maharashtra', population: 24000, latitude: 20.7002, longitude: 77.0082, storage_capacity: 1100000, current_storage: 440000 },
+      { name: 'Amravati Rural', district: 'Amravati', state: 'Maharashtra', population: 20000, latitude: 20.9374, longitude: 77.7796, storage_capacity: 950000, current_storage: 475000 },
+      { name: 'Buldhana', district: 'Buldhana', state: 'Maharashtra', population: 18000, latitude: 20.5311, longitude: 76.1844, storage_capacity: 850000, current_storage: 425000 },
+      { name: 'Chandrapur Rural', district: 'Chandrapur', state: 'Maharashtra', population: 19000, latitude: 19.9615, longitude: 79.2961, storage_capacity: 900000, current_storage: 450000 },
+      { name: 'Gondia', district: 'Gondia', state: 'Maharashtra', population: 17000, latitude: 21.4560, longitude: 80.1923, storage_capacity: 800000, current_storage: 400000 },
+      
+      // Normal villages (good storage) - Vidarbha
+      { name: 'Nagpur Rural', district: 'Nagpur', state: 'Maharashtra', population: 15000, latitude: 21.1458, longitude: 79.0882, storage_capacity: 850000, current_storage: 680000 },
+      { name: 'Bhandara', district: 'Bhandara', state: 'Maharashtra', population: 14000, latitude: 21.1704, longitude: 79.6507, storage_capacity: 750000, current_storage: 600000 },
+      { name: 'Gadchiroli', district: 'Gadchiroli', state: 'Maharashtra', population: 12000, latitude: 20.1809, longitude: 80.0131, storage_capacity: 650000, current_storage: 520000 },
+      
+      // Additional Vidarbha villages
+      { name: 'Hinganghat', district: 'Wardha', state: 'Maharashtra', population: 16000, latitude: 20.5489, longitude: 78.8342, storage_capacity: 750000, current_storage: 375000 },
+      { name: 'Karanja', district: 'Washim', state: 'Maharashtra', population: 15000, latitude: 20.4826, longitude: 77.4890, storage_capacity: 700000, current_storage: 350000 },
+      { name: 'Pusad', district: 'Yavatmal', state: 'Maharashtra', population: 17000, latitude: 19.9142, longitude: 77.5779, storage_capacity: 800000, current_storage: 320000 },
+      { name: 'Wani', district: 'Yavatmal', state: 'Maharashtra', population: 13000, latitude: 20.0554, longitude: 78.9530, storage_capacity: 650000, current_storage: 325000 },
+      { name: 'Arvi', district: 'Wardha', state: 'Maharashtra', population: 14000, latitude: 20.9978, longitude: 78.2281, storage_capacity: 700000, current_storage: 560000 },
+      { name: 'Deoli', district: 'Wardha', state: 'Maharashtra', population: 11000, latitude: 20.6500, longitude: 78.4800, storage_capacity: 600000, current_storage: 480000 },
+      { name: 'Morshi', district: 'Amravati', state: 'Maharashtra', population: 12500, latitude: 21.3400, longitude: 77.8900, storage_capacity: 650000, current_storage: 520000 },
+      { name: 'Achalpur', district: 'Amravati', state: 'Maharashtra', population: 18000, latitude: 21.2600, longitude: 77.5100, storage_capacity: 850000, current_storage: 425000 },
+      { name: 'Daryapur', district: 'Amravati', state: 'Maharashtra', population: 13500, latitude: 20.9200, longitude: 77.3300, storage_capacity: 680000, current_storage: 340000 }
+    ]);
+    console.log(`✅ Created ${villages.length} Vidarbha villages\n`);
+
+    // 3. Create Historical Rainfall Data (last 5 years average)
+    console.log('🌧️  Creating historical rainfall data...');
+    const historicalRainfall = [];
+    for (const village of villages) {
+      // Create monthly historical averages for each village
+      for (let month = 1; month <= 12; month++) {
+        const baseRainfall = month >= 6 && month <= 9 ? 150 : 30; // Monsoon vs non-monsoon
+        historicalRainfall.push({
+          village_id: village.id,
+          record_date: new Date(2020, month - 1, 15),
+          rainfall_mm: baseRainfall + (Math.random() * 50 - 25),
+          is_historical: true
+        });
+      }
+    }
+    await RainfallRecord.bulkCreate(historicalRainfall);
+    console.log(`✅ Created ${historicalRainfall.length} historical rainfall records\n`);
+
+    // 4. Create Current Year Rainfall Data (showing deficit)
+    console.log('🌧️  Creating current rainfall data...');
+    const currentRainfall = [];
+    const currentYear = new Date().getFullYear();
+    const currentMonth = new Date().getMonth();
+    
+    for (const village of villages) {
+      // Create data for last 6 months
+      for (let i = 5; i >= 0; i--) {
+        const month = currentMonth - i;
+        const date = new Date(currentYear, month, 15);
+        const baseRainfall = (month >= 5 && month <= 8) ? 150 : 30;
+        
+        // Critical villages get 40% less rain
+        // Alert villages get 25% less rain
+        // Normal villages get 10% less rain
+        let deficitFactor = 0.9;
+        if (village.current_storage < village.storage_capacity * 0.3) {
+          deficitFactor = 0.6; // Critical
+        } else if (village.current_storage < village.storage_capacity * 0.5) {
+          deficitFactor = 0.75; // Alert
+        }
+        
+        currentRainfall.push({
+          village_id: village.id,
+          record_date: date,
+          rainfall_mm: (baseRainfall * deficitFactor) + (Math.random() * 20 - 10),
+          is_historical: false
+        });
+      }
+    }
+    await RainfallRecord.bulkCreate(currentRainfall);
+    console.log(`✅ Created ${currentRainfall.length} current rainfall records\n`);
+
+    // 5. Create Groundwater Data (showing declining trend for critical villages)
+    console.log('💧 Creating groundwater data...');
+    const groundwaterRecords = [];
+    
+    for (const village of villages) {
+      // Create monthly data for last 6 months
+      let baseLevel = 10; // meters below ground
+      
+      // Critical villages have deeper water levels
+      if (village.current_storage < village.storage_capacity * 0.3) {
+        baseLevel = 18;
+      } else if (village.current_storage < village.storage_capacity * 0.5) {
+        baseLevel = 14;
+      }
+      
+      for (let i = 5; i >= 0; i--) {
+        const month = currentMonth - i;
+        const date = new Date(currentYear, month, 1);
+        
+        // Water level increases (gets worse) over time for critical villages
+        const trendFactor = village.current_storage < village.storage_capacity * 0.3 ? 0.5 : 0.2;
+        const waterLevel = baseLevel + (5 - i) * trendFactor + (Math.random() * 2 - 1);
+        
+        groundwaterRecords.push({
+          village_id: village.id,
+          measurement_date: date,
+          water_level: waterLevel,
+          quality_index: 70 + (Math.random() * 20)
+        });
+      }
+    }
+    await GroundwaterRecord.bulkCreate(groundwaterRecords);
+    console.log(`✅ Created ${groundwaterRecords.length} groundwater records\n`);
+
+    // 6. Create Tankers (Vidarbha Region)
+    console.log('🚚 Creating tankers for Vidarbha...');
+    const tankers = await Tanker.bulkCreate([
+      { registration_number: 'MH-31-AB-1234', capacity: 10000, status: 'available', current_latitude: 21.1458, current_longitude: 79.0882 }, // Nagpur
+      { registration_number: 'MH-31-CD-5678', capacity: 12000, status: 'available', current_latitude: 20.9374, current_longitude: 77.7796 }, // Amravati
+      { registration_number: 'MH-32-EF-9012', capacity: 10000, status: 'available', current_latitude: 20.7002, current_longitude: 77.0082 }, // Akola
+      { registration_number: 'MH-33-GH-3456', capacity: 15000, status: 'available', current_latitude: 20.3974, current_longitude: 78.1320 }, // Yavatmal
+      { registration_number: 'MH-34-IJ-7890', capacity: 10000, status: 'available', current_latitude: 20.7453, current_longitude: 78.6022 }, // Wardha
+      { registration_number: 'MH-35-KL-2345', capacity: 12000, status: 'available', current_latitude: 20.1097, current_longitude: 77.1350 }, // Washim
+      { registration_number: 'MH-36-MN-6789', capacity: 10000, status: 'available', current_latitude: 20.5311, current_longitude: 76.1844 }, // Buldhana
+      { registration_number: 'MH-37-OP-0123', capacity: 10000, status: 'available', current_latitude: 19.9615, current_longitude: 79.2961 }, // Chandrapur
+      { registration_number: 'MH-38-QR-4567', capacity: 15000, status: 'maintenance', current_latitude: 21.1704, current_longitude: 79.6507 }, // Bhandara
+      { registration_number: 'MH-39-ST-8901', capacity: 12000, status: 'available', current_latitude: 21.4560, current_longitude: 80.1923 }  // Gondia
+    ]);
+    console.log(`✅ Created ${tankers.length} tankers\n`);
+
+    // 7. Create Alerts for Critical Villages
+    console.log('🔔 Creating alerts...');
+    const alerts = [];
+    for (const village of villages) {
+      if (village.current_storage < village.storage_capacity * 0.3) {
+        alerts.push({
+          village_id: village.id,
+          severity: 'critical',
+          message: `Critical water shortage detected. Storage at ${Math.round((village.current_storage / village.storage_capacity) * 100)}%. Immediate tanker allocation required.`,
+          wsi_score: 75 + Math.random() * 20,
+          is_resolved: false
+        });
+      } else if (village.current_storage < village.storage_capacity * 0.5) {
+        alerts.push({
+          village_id: village.id,
+          severity: 'alert',
+          message: `Water stress detected. Storage at ${Math.round((village.current_storage / village.storage_capacity) * 100)}%. Monitor closely.`,
+          wsi_score: 50 + Math.random() * 20,
+          is_resolved: false
+        });
+      }
+    }
+    await Alert.bulkCreate(alerts);
+    console.log(`✅ Created ${alerts.length} alerts\n`);
+
+    console.log('🎉 Database seeding completed successfully!\n');
+    console.log('📊 Summary:');
+    console.log(`   - Users: ${await User.count()}`);
+    console.log(`   - Villages: ${villages.length}`);
+    console.log(`   - Historical Rainfall: ${historicalRainfall.length}`);
+    console.log(`   - Current Rainfall: ${currentRainfall.length}`);
+    console.log(`   - Groundwater Records: ${groundwaterRecords.length}`);
+    console.log(`   - Tankers: ${tankers.length}`);
+    console.log(`   - Alerts: ${alerts.length}`);
+    console.log('\n✅ All core features are now ready to test!\n');
+    
+    console.log('🔐 Login Credentials:');
+    console.log('   Admin: admin@water.gov / admin123');
+    console.log('   Operator: operator@water.gov / operator123');
+    console.log('   Viewer: viewer@water.gov / viewer123\n');
+
+  } catch (error) {
+    console.error('❌ Seeding failed:', error);
+  } finally {
+    await sequelize.close();
+  }
+}
+
+seedDatabase();

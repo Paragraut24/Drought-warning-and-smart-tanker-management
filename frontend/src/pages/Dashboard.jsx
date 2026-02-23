@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import { analysisAPI, villageAPI, alertAPI } from '../services/api';
 
 const Dashboard = () => {
@@ -35,95 +35,306 @@ const Dashboard = () => {
     }
   };
 
+  const COLORS = ['#ef4444', '#f59e0b', '#10b981'];
+
   if (loading) {
-    return <div className="text-white text-center">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading JalRakshak dashboard...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="space-y-6">
-      <motion.h1
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-4xl font-bold text-white mb-8"
-      >
-        Dashboard Overview
-      </motion.h1>
+      {/* Hero Section */}
+      <div className="hero-section relative text-white p-12 rounded-2xl">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative z-10"
+        >
+          <h1 className="text-5xl font-bold mb-2">JalRakshak AI Dashboard</h1>
+          <p className="text-2xl mb-4">जल रक्षक - विदर्भ जल संकट प्रबंधन</p>
+          <p className="text-xl opacity-90">Real-time water crisis monitoring for Vidarbha region</p>
+          <div className="mt-4 flex gap-6 text-sm">
+            <div className="flex items-center gap-2">
+              <span className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></span>
+              <span>Live Monitoring Active</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span>🌡️</span>
+              <span>Drought Detection Enabled</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span>🤖</span>
+              <span>AI Predictions Running</span>
+            </div>
+          </div>
+        </motion.div>
+        <div className="hero-wave"></div>
+      </div>
 
+      {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {[
-          { label: 'Total Villages', value: stats.total, color: 'bg-blue-500', icon: '🏘️' },
-          { label: 'Critical', value: stats.critical, color: 'bg-red-500', icon: '🚨' },
-          { label: 'Alert', value: stats.alert, color: 'bg-yellow-500', icon: '⚠️' },
-          { label: 'Normal', value: stats.normal, color: 'bg-green-500', icon: '✅' }
+          { 
+            label: 'Total Villages', 
+            sublabel: 'कुल गाँव',
+            value: stats.total, 
+            gradient: 'from-blue-500 to-blue-600', 
+            icon: '🏘️',
+            desc: 'Vidarbha Region'
+          },
+          { 
+            label: 'Critical Status', 
+            sublabel: 'गंभीर स्थिति',
+            value: stats.critical, 
+            gradient: 'from-red-500 to-red-600', 
+            icon: '🚨',
+            desc: 'Immediate Action'
+          },
+          { 
+            label: 'Alert Status', 
+            sublabel: 'चेतावनी',
+            value: stats.alert, 
+            gradient: 'from-yellow-500 to-yellow-600', 
+            icon: '⚠️',
+            desc: 'Monitor Closely'
+          },
+          { 
+            label: 'Normal Status', 
+            sublabel: 'सामान्य',
+            value: stats.normal, 
+            gradient: 'from-green-500 to-green-600', 
+            icon: '✅',
+            desc: 'Stable Supply'
+          }
         ].map((stat, idx) => (
           <motion.div
             key={idx}
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ delay: idx * 0.1 }}
-            className="clay-card p-6"
+            className="card p-6 overflow-hidden relative"
           >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 text-sm">{stat.label}</p>
-                <motion.p
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 0.5 + idx * 0.1 }}
-                  className="text-3xl font-bold text-gray-800"
-                >
-                  {stat.value}
-                </motion.p>
+            <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${stat.gradient} opacity-10 rounded-full -mr-16 -mt-16`}></div>
+            <div className="relative">
+              <div className="flex items-center justify-between mb-2">
+                <div>
+                  <p className="text-gray-600 text-sm font-semibold">{stat.label}</p>
+                  <p className="text-gray-500 text-xs">{stat.sublabel}</p>
+                </div>
+                <span className="text-3xl">{stat.icon}</span>
               </div>
-              <div className={`${stat.color} p-4 rounded-xl text-3xl`}>
-                {stat.icon}
-              </div>
+              <motion.p
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.3 + idx * 0.1, type: 'spring' }}
+                className="text-4xl font-bold text-gray-800 mb-1"
+              >
+                {stat.value}
+              </motion.p>
+              <p className="text-xs text-gray-500">{stat.desc}</p>
             </div>
           </motion.div>
         ))}
       </div>
 
+      {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Water Stress Index Trend - Line Chart */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          className="clay-card p-6"
+          className="card p-6"
         >
-          <h2 className="text-xl font-bold text-gray-800 mb-4">Top Critical Villages</h2>
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-800">Water Stress Index</h2>
+              <p className="text-sm text-gray-500">जल तनाव सूचकांक - Critical Villages Trend</p>
+            </div>
+            <span className="px-3 py-1 bg-red-100 text-red-600 rounded-full text-sm font-semibold">
+              High Risk
+            </span>
+          </div>
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={wsiData.slice(0, 5)}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="villageName" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="wsi" fill="#ef4444" />
-            </BarChart>
+            <AreaChart data={wsiData.slice(0, 8)}>
+              <defs>
+                <linearGradient id="colorWSI" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#ef4444" stopOpacity={0.8}/>
+                  <stop offset="95%" stopColor="#ef4444" stopOpacity={0.1}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <XAxis 
+                dataKey="villageName" 
+                stroke="#64748b" 
+                fontSize={12}
+                angle={-45}
+                textAnchor="end"
+                height={80}
+              />
+              <YAxis stroke="#64748b" />
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: 'white', 
+                  border: 'none', 
+                  borderRadius: '8px',
+                  boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                }}
+              />
+              <Area 
+                type="monotone" 
+                dataKey="wsi" 
+                stroke="#ef4444" 
+                strokeWidth={3}
+                fillOpacity={1} 
+                fill="url(#colorWSI)" 
+              />
+            </AreaChart>
           </ResponsiveContainer>
+          <p className="text-xs text-gray-500 mt-4 text-center">
+            Higher values indicate severe water stress requiring immediate intervention
+          </p>
         </motion.div>
 
+        {/* Distribution Pie Chart */}
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
-          className="clay-card p-6"
+          className="card p-6"
         >
-          <h2 className="text-xl font-bold text-gray-800 mb-4">Active Alerts</h2>
-          <div className="space-y-3 max-h-80 overflow-y-auto">
-            {alerts.slice(0, 5).map((alert) => (
-              <motion.div
-                key={alert.id}
-                whileHover={{ scale: 1.02 }}
-                className={`p-4 rounded-xl ${
-                  alert.severity === 'critical' ? 'bg-red-100' :
-                  alert.severity === 'alert' ? 'bg-yellow-100' : 'bg-green-100'
-                }`}
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold text-gray-800">Status Distribution</h2>
+            <p className="text-sm text-gray-500">स्थिति वितरण - Regional Overview</p>
+          </div>
+          <ResponsiveContainer width="100%" height={300}>
+            <PieChart>
+              <Pie
+                data={[
+                  { name: 'Critical (गंभीर)', value: stats.critical },
+                  { name: 'Alert (चेतावनी)', value: stats.alert },
+                  { name: 'Normal (सामान्य)', value: stats.normal }
+                ]}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                label={({ name, percent }) => `${name.split(' ')[0]} ${(percent * 100).toFixed(0)}%`}
+                outerRadius={100}
+                fill="#8884d8"
+                dataKey="value"
               >
-                <p className="font-semibold">{alert.Village?.name}</p>
-                <p className="text-sm text-gray-600">{alert.message}</p>
-              </motion.div>
-            ))}
+                {COLORS.map((color, index) => (
+                  <Cell key={`cell-${index}`} fill={color} />
+                ))}
+              </Pie>
+              <Tooltip />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
+          <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs">
+            <div className="p-2 bg-red-50 rounded">
+              <p className="font-bold text-red-600">{stats.critical}</p>
+              <p className="text-gray-600">Need Tankers</p>
+            </div>
+            <div className="p-2 bg-yellow-50 rounded">
+              <p className="font-bold text-yellow-600">{stats.alert}</p>
+              <p className="text-gray-600">Watch List</p>
+            </div>
+            <div className="p-2 bg-green-50 rounded">
+              <p className="font-bold text-green-600">{stats.normal}</p>
+              <p className="text-gray-600">Sufficient</p>
+            </div>
           </div>
         </motion.div>
       </div>
+
+      {/* Active Alerts */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="card p-6"
+      >
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800">Active Alerts</h2>
+            <p className="text-sm text-gray-500">सक्रिय अलर्ट - Immediate Attention Required</p>
+          </div>
+          <span className="px-3 py-1 bg-blue-100 text-blue-600 rounded-full text-sm font-semibold">
+            {alerts.length} Active
+          </span>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {alerts.slice(0, 6).map((alert, idx) => (
+            <motion.div
+              key={alert.id}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: idx * 0.05 }}
+              whileHover={{ scale: 1.02 }}
+              className={`p-4 rounded-xl border-l-4 ${
+                alert.severity === 'critical' 
+                  ? 'bg-red-50 border-red-500' 
+                  : alert.severity === 'alert' 
+                  ? 'bg-yellow-50 border-yellow-500' 
+                  : 'bg-green-50 border-green-500'
+              }`}
+            >
+              <div className="flex items-start justify-between mb-2">
+                <div>
+                  <p className="font-bold text-gray-800">{alert.Village?.name || 'Unknown'}</p>
+                  <p className="text-xs text-gray-500">{alert.Village?.district || 'Vidarbha'}</p>
+                </div>
+                <span className="text-2xl">
+                  {alert.severity === 'critical' ? '🚨' : alert.severity === 'alert' ? '⚠️' : '✅'}
+                </span>
+              </div>
+              <p className="text-sm text-gray-600 mb-2">{alert.message}</p>
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-gray-500">
+                  {new Date(alert.createdAt).toLocaleDateString('en-IN')}
+                </span>
+                <span className={`px-2 py-1 rounded ${
+                  alert.severity === 'critical' ? 'bg-red-200 text-red-800' : 
+                  alert.severity === 'alert' ? 'bg-yellow-200 text-yellow-800' : 
+                  'bg-green-200 text-green-800'
+                }`}>
+                  {alert.severity.toUpperCase()}
+                </span>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+        {alerts.length === 0 && (
+          <div className="text-center py-12 text-gray-500">
+            <p className="text-4xl mb-2">✅</p>
+            <p className="text-lg font-semibold">No Active Alerts</p>
+            <p className="text-sm">All villages have sufficient water supply</p>
+          </div>
+        )}
+      </motion.div>
+
+      {/* Info Banner */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-6 rounded-xl"
+      >
+        <div className="flex items-center gap-4">
+          <span className="text-4xl">💡</span>
+          <div>
+            <h3 className="font-bold text-lg mb-1">JalRakshak AI - Powered by Machine Learning</h3>
+            <p className="text-sm opacity-90">
+              Using advanced algorithms to predict water demand, optimize tanker routes, and prevent water crises in Vidarbha region. 
+              Real-time monitoring of {stats.total} villages with AI-driven drought detection.
+            </p>
+          </div>
+        </div>
+      </motion.div>
     </div>
   );
 };

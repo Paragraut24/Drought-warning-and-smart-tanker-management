@@ -60,55 +60,106 @@ const DataUpload = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <motion.h1
+    <div className="max-w-4xl mx-auto">
+      {/* Header */}
+      <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-4xl font-bold text-white mb-8"
+        className="mb-8"
       >
-        Data Upload
-      </motion.h1>
+        <h1 className="text-4xl font-bold text-gray-800 mb-2">Data Upload</h1>
+        <p className="text-gray-600">डेटा अपलोड - Add rainfall and groundwater records for Vidarbha villages</p>
+      </motion.div>
 
+      <div className="grid md:grid-cols-3 gap-6">
+        {/* Info Cards */}
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="card p-6 bg-gradient-to-br from-blue-50 to-blue-100"
+        >
+          <div className="text-4xl mb-3">🌧️</div>
+          <h3 className="font-bold text-gray-800 mb-2">Rainfall Data</h3>
+          <p className="text-sm text-gray-600">Upload daily rainfall measurements in millimeters</p>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.1 }}
+          className="card p-6 bg-gradient-to-br from-green-50 to-green-100"
+        >
+          <div className="text-4xl mb-3">💧</div>
+          <h3 className="font-bold text-gray-800 mb-2">Groundwater Level</h3>
+          <p className="text-sm text-gray-600">Record water table depth below ground surface</p>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.2 }}
+          className="card p-6 bg-gradient-to-br from-purple-50 to-purple-100"
+        >
+          <div className="text-4xl mb-3">📊</div>
+          <h3 className="font-bold text-gray-800 mb-2">AI Analysis</h3>
+          <p className="text-sm text-gray-600">Data automatically analyzed for drought prediction</p>
+        </motion.div>
+      </div>
+
+      {/* Upload Form */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="clay-card p-8"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+        className="card p-8 mt-6"
       >
+        <h2 className="text-2xl font-bold text-gray-800 mb-6">Upload New Record</h2>
+        
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Village</label>
-            <select
-              value={selectedVillage}
-              onChange={(e) => setSelectedVillage(e.target.value)}
-              className="clay-input w-full"
-              required
-            >
-              <option value="">Select Village</option>
-              {villages.map((v) => (
-                <option key={v.id} value={v.id}>{v.name} - {v.district}</option>
-              ))}
-            </select>
+          <div className="grid md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Village <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={selectedVillage}
+                onChange={(e) => setSelectedVillage(e.target.value)}
+                className="input-field"
+                required
+              >
+                <option value="">Select Village</option>
+                {villages.map((v) => (
+                  <option key={v.id} value={v.id}>
+                    {v.name} - {v.district}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Data Type <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={dataType}
+                onChange={(e) => setDataType(e.target.value)}
+                className="input-field"
+              >
+                <option value="rainfall">Rainfall</option>
+                <option value="groundwater">Groundwater</option>
+              </select>
+            </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Data Type</label>
-            <select
-              value={dataType}
-              onChange={(e) => setDataType(e.target.value)}
-              className="clay-input w-full"
-            >
-              <option value="rainfall">Rainfall</option>
-              <option value="groundwater">Groundwater</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Date</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Date <span className="text-red-500">*</span>
+            </label>
             <input
               type="date"
               value={formData.record_date}
               onChange={(e) => setFormData({ ...formData, record_date: e.target.value })}
-              className="clay-input w-full"
+              className="input-field"
               required
             />
           </div>
@@ -116,49 +167,66 @@ const DataUpload = () => {
           {dataType === 'rainfall' ? (
             <>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Rainfall (mm)</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Rainfall (mm) <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="number"
                   step="0.01"
                   value={formData.rainfall_mm}
                   onChange={(e) => setFormData({ ...formData, rainfall_mm: e.target.value })}
-                  className="clay-input w-full"
+                  className="input-field"
+                  placeholder="Enter rainfall in millimeters"
                   required
                 />
+                <p className="text-xs text-gray-500 mt-1">Example: 25.5 mm</p>
               </div>
-              <div className="flex items-center">
+              <div className="flex items-center p-4 bg-gray-50 rounded-lg">
                 <input
                   type="checkbox"
                   checked={formData.is_historical}
                   onChange={(e) => setFormData({ ...formData, is_historical: e.target.checked })}
-                  className="mr-2"
+                  className="w-4 h-4 text-blue-600 rounded"
+                  id="historical"
                 />
-                <label className="text-sm text-gray-700">Historical Data</label>
+                <label htmlFor="historical" className="ml-3 text-sm text-gray-700">
+                  <span className="font-semibold">Historical Data</span>
+                  <p className="text-xs text-gray-500">Check if this is past data for baseline comparison</p>
+                </label>
               </div>
             </>
           ) : (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Water Level (m below ground)</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Water Level (meters below ground) <span className="text-red-500">*</span>
+              </label>
               <input
                 type="number"
                 step="0.01"
                 value={formData.water_level}
                 onChange={(e) => setFormData({ ...formData, water_level: e.target.value })}
-                className="clay-input w-full"
+                className="input-field"
+                placeholder="Enter depth in meters"
                 required
               />
+              <p className="text-xs text-gray-500 mt-1">Example: 15.5 meters (deeper = worse)</p>
             </div>
           )}
 
           {message && (
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className={`p-4 rounded-xl ${
-                message.includes('success') ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className={`p-4 rounded-lg border-l-4 ${
+                message.includes('success') 
+                  ? 'bg-green-50 border-green-500 text-green-700' 
+                  : 'bg-red-50 border-red-500 text-red-700'
               }`}
             >
-              {message}
+              <div className="flex items-center gap-2">
+                <span className="text-xl">{message.includes('success') ? '✅' : '❌'}</span>
+                <span className="font-semibold">{message}</span>
+              </div>
             </motion.div>
           )}
 
@@ -166,11 +234,42 @@ const DataUpload = () => {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             type="submit"
-            className="clay-button w-full py-3 text-gray-700 font-semibold"
+            className="btn-primary w-full py-3"
           >
             Upload Data
           </motion.button>
         </form>
+      </motion.div>
+
+      {/* Help Section */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.5 }}
+        className="mt-6 p-6 bg-blue-50 rounded-xl border border-blue-200"
+      >
+        <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
+          <span>💡</span>
+          <span>Data Collection Guidelines</span>
+        </h3>
+        <ul className="space-y-2 text-sm text-gray-700">
+          <li className="flex items-start gap-2">
+            <span className="text-blue-600">•</span>
+            <span>Rainfall should be measured daily using standard rain gauges</span>
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="text-blue-600">•</span>
+            <span>Groundwater levels should be measured from bore wells or observation wells</span>
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="text-blue-600">•</span>
+            <span>Historical data helps establish baseline for drought detection</span>
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="text-blue-600">•</span>
+            <span>Regular data updates improve AI prediction accuracy</span>
+          </li>
+        </ul>
       </motion.div>
     </div>
   );
