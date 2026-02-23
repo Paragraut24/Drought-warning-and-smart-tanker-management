@@ -268,6 +268,7 @@ const AllocationPanel = () => {
                 <tr className="border-b-2 border-gray-200">
                   <th className="text-left p-4 font-semibold text-gray-700">Village</th>
                   <th className="text-left p-4 font-semibold text-gray-700">District</th>
+                  <th className="text-left p-4 font-semibold text-gray-700">Priority</th>
                   <th className="text-left p-4 font-semibold text-gray-700">Tanker</th>
                   <th className="text-left p-4 font-semibold text-gray-700">Status</th>
                   <th className="text-left p-4 font-semibold text-gray-700">Allocated</th>
@@ -285,6 +286,22 @@ const AllocationPanel = () => {
                   >
                     <td className="p-4 font-medium text-gray-800">{alloc.Village?.name || 'N/A'}</td>
                     <td className="p-4 text-gray-600">📍 {alloc.Village?.district || 'N/A'}</td>
+                    <td className="p-4">
+                      <div className="flex items-center gap-2">
+                        <span className={`px-3 py-1 rounded-full text-sm font-bold ${
+                          alloc.priority_score >= 80 ? 'bg-red-100 text-red-700' :
+                          alloc.priority_score >= 60 ? 'bg-orange-100 text-orange-700' :
+                          alloc.priority_score >= 40 ? 'bg-yellow-100 text-yellow-700' :
+                          'bg-green-100 text-green-700'
+                        }`}>
+                          {alloc.priority_score ? alloc.priority_score.toFixed(1) : '0.0'}
+                        </span>
+                        {alloc.priority_score >= 80 && <span className="text-red-500">🔴</span>}
+                        {alloc.priority_score >= 60 && alloc.priority_score < 80 && <span className="text-orange-500">🟠</span>}
+                        {alloc.priority_score >= 40 && alloc.priority_score < 60 && <span className="text-yellow-500">🟡</span>}
+                        {alloc.priority_score < 40 && <span className="text-green-500">🟢</span>}
+                      </div>
+                    </td>
                     <td className="p-4">
                       <div>
                         <p className="text-gray-800 font-medium">{alloc.Tanker?.registration_number || 'N/A'}</p>
