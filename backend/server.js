@@ -10,9 +10,9 @@ import dataRoutes from './routes/data.js';
 import analysisRoutes from './routes/analysis.js';
 import tankerRoutes from './routes/tankers.js';
 import alertRoutes from './routes/alerts.js';
-import reportRoutes from './routes/reports.js';
 import weatherRoutes from './routes/weather.js';
 import reportRoutes from './routes/reports.js';
+import { startDataSyncScheduler } from './services/weatherSync.js';
 
 dotenv.config();
 
@@ -29,7 +29,6 @@ app.use('/api/data', dataRoutes);
 app.use('/api/analysis', analysisRoutes);
 app.use('/api/tankers', tankerRoutes);
 app.use('/api/alerts', alertRoutes);
-app.use('/api/reports', reportRoutes);
 app.use('/api/weather', weatherRoutes);
 app.use('/api/reports', reportRoutes);
 
@@ -46,6 +45,9 @@ sequelize.sync({ alter: true })
     console.log('Tables created/updated successfully');
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
+
+      // Start automatic data sync (runs now + every 12 hours)
+      startDataSyncScheduler();
     });
   })
   .catch(err => {
