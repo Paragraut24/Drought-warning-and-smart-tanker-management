@@ -4,7 +4,7 @@ import { authenticate, authorize } from '../middleware/auth.js';
 
 const router = express.Router();
 
-router.post('/', authenticate, authorize('admin', 'operator'), async (req, res, next) => {
+router.post('/', authenticate, authorize('admin'), async (req, res, next) => {
   try {
     const alert = await Alert.create(req.body);
     res.status(201).json(alert);
@@ -38,7 +38,25 @@ router.get('/active', authenticate, async (req, res, next) => {
   }
 });
 
-router.put('/:id/resolve', authenticate, authorize('admin', 'operator'), async (req, res, next) => {
+// Local user: get alerts for their village only
+router.get('/my-village', authenticate, async (req, res, next) => {
+  try {
+    const village_id = req.user.village_id;
+    if (!village_id) {
+      return res.status(403).json({ error: 'No village linked to this user' });
+    }
+    const alerts = await Alert.findAll({
+      where: { village_id },
+      include: [{ model: Village, attributes: ['name', 'district'] }],
+      order: [['createdAt', 'DESC']]
+    });
+    res.json(alerts);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.put('/:id/resolve', authenticate, authorize('admin'), async (req, res, next) => {
   try {
     const alert = await Alert.findByPk(req.params.id);
     if (!alert) {
@@ -46,6 +64,19 @@ router.put('/:id/resolve', authenticate, authorize('admin', 'operator'), async (
     }
     await alert.update({ is_resolved: true });
     res.json(alert);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.delete('/:id', authenticate, authorize('admin'), async (req, res, next) => {
+  try {
+    const alert = await Alert.findByPk(req.params.id);
+    if (!alert) {
+      return res.status(404).json({ error: 'Alert not found' });
+    }
+    await alert.destroy();
+    res.json({ message: 'Alert deleted successfully' });
   } catch (error) {
     next(error);
   }

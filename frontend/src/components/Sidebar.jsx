@@ -1,16 +1,18 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useAuth } from '../context/AuthContext';
 
-const Sidebar = ({ onLogout }) => {
+const Sidebar = () => {
+  const { user, isAdmin, logout } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    onLogout();
+    logout();
     navigate('/login');
   };
 
-  const menuItems = [
+  const adminMenuItems = [
     { path: '/', icon: '📊', label: 'Dashboard', desc: 'Overview' },
     { path: '/upload', icon: '📤', label: 'Data Upload', desc: 'Add Records' },
     { path: '/heatmap', icon: '🗺️', label: 'Heatmap', desc: 'Regional View' },
@@ -19,12 +21,26 @@ const Sidebar = ({ onLogout }) => {
     { path: '/alerts', icon: '🔔', label: 'Alerts', desc: 'Notifications' },
   ];
 
+  const localUserMenuItems = [
+    { path: '/local', icon: '🏠', label: 'My Dashboard', desc: 'Home' },
+    { path: '/local/village', icon: '🏘️', label: 'My Village', desc: 'Village Data' },
+    { path: '/local/tankers', icon: '🚛', label: 'Track Tankers', desc: 'Deliveries' },
+    { path: '/local/report', icon: '📝', label: 'Report Shortage', desc: 'Submit Report' },
+    { path: '/local/alerts', icon: '🔔', label: 'Alerts', desc: 'Notifications' },
+  ];
+
+  const menuItems = isAdmin ? adminMenuItems : localUserMenuItems;
+
+  const roleColors = isAdmin
+    ? { gradient: 'from-blue-500 to-purple-600', badge: 'bg-blue-100 text-blue-700' }
+    : { gradient: 'from-green-500 to-teal-600', badge: 'bg-green-100 text-green-700' };
+
   return (
     <div className="sidebar-nav w-64 min-h-screen flex flex-col">
       {/* Logo */}
       <div className="p-6 border-b border-gray-100">
         <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+          <div className={`w-10 h-10 bg-gradient-to-br ${roleColors.gradient} rounded-lg flex items-center justify-center`}>
             <span className="text-white text-xl">💧</span>
           </div>
           <div>
@@ -42,6 +58,7 @@ const Sidebar = ({ onLogout }) => {
             <NavLink
               key={item.path}
               to={item.path}
+              end={item.path === '/' || item.path === '/local'}
               className={({ isActive }) =>
                 `nav-item flex items-center gap-3 ${isActive ? 'active' : 'text-gray-700'}`
               }
@@ -60,11 +77,18 @@ const Sidebar = ({ onLogout }) => {
       <div className="p-4 border-t border-gray-100">
         <div className="mb-3 p-3 bg-gray-50 rounded-lg">
           <p className="text-sm font-semibold text-gray-800">
-            {JSON.parse(localStorage.getItem('user') || '{}').username || 'Admin'}
+            {user?.username || 'User'}
           </p>
-          <p className="text-xs text-gray-500">
-            {JSON.parse(localStorage.getItem('user') || '{}').role || 'Administrator'}
-          </p>
+          <div className="flex items-center gap-2 mt-1">
+            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${roleColors.badge}`}>
+              {isAdmin ? 'Admin' : 'Local User'}
+            </span>
+          </div>
+          {!isAdmin && user?.village && (
+            <p className="text-xs text-gray-500 mt-1">
+              📍 {user.village.name}, {user.village.district}
+            </p>
+          )}
         </div>
         <motion.button
           whileHover={{ scale: 1.02 }}

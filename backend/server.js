@@ -10,6 +10,7 @@ import dataRoutes from './routes/data.js';
 import analysisRoutes from './routes/analysis.js';
 import tankerRoutes from './routes/tankers.js';
 import alertRoutes from './routes/alerts.js';
+import reportRoutes from './routes/reports.js';
 
 dotenv.config();
 
@@ -26,6 +27,7 @@ app.use('/api/data', dataRoutes);
 app.use('/api/analysis', analysisRoutes);
 app.use('/api/tankers', tankerRoutes);
 app.use('/api/alerts', alertRoutes);
+app.use('/api/reports', reportRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Water Governance API is running' });

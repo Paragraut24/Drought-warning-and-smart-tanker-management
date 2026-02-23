@@ -5,6 +5,7 @@ import RainfallRecord from './RainfallRecord.js';
 import Tanker from './Tanker.js';
 import Allocation from './Allocation.js';
 import Alert from './Alert.js';
+import WaterShortageReport from './WaterShortageReport.js';
 
 export {
   User,
@@ -13,5 +14,6 @@ export {
   RainfallRecord,
   Tanker,
   Allocation,
-  Alert
+  Alert,
+  WaterShortageReport
 };
