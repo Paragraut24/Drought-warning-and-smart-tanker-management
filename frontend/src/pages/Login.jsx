@@ -19,9 +19,16 @@ const Login = () => {
 
   useEffect(() => {
     // Fetch villages for registration dropdown
-    authAPI.getVillages()
-      .then(res => setVillages(res.data))
-      .catch(() => { });
+    const fetchVillages = async () => {
+      try {
+        const res = await authAPI.getVillages();
+        setVillages(res.data || []);
+      } catch (err) {
+        console.error('Failed to load villages:', err);
+        setError('Failed to load villages. Please refresh the page.');
+      }
+    };
+    fetchVillages();
   }, []);
 
   const resetForm = () => {
