@@ -15,10 +15,26 @@ router.post('/', authenticate, authorize('admin'), async (req, res, next) => {
 
 router.get('/', authenticate, async (req, res, next) => {
   try {
+    const { district, severity, resolved } = req.query;
+    
+    const whereClause = {};
+    if (severity) whereClause.severity = severity;
+    if (resolved !== undefined) whereClause.is_resolved = resolved === 'true';
+
     const alerts = await Alert.findAll({
-      include: [{ model: Village, attributes: ['name', 'district'] }],
-      order: [['createdAt', 'DESC']]
+      where: whereClause,
+      include: [{ 
+        model: Village, 
+        attributes: ['name', 'district'],
+        ...(district && { where: { district } })
+      }],
+      order: [
+        ['is_resolved', 'ASC'],  // Unresolved first
+        ['severity', 'DESC'],     // Critical first
+        ['createdAt', 'DESC']     // Newest first
+      ]
     });
+    
     res.json(alerts);
   } catch (error) {
     next(error);
@@ -51,6 +67,19 @@ router.get('/my-village', authenticate, async (req, res, next) => {
       order: [['createdAt', 'DESC']]
     });
     res.json(alerts);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Get unique districts for filtering
+router.get('/districts', authenticate, async (req, res, next) => {
+  try {
+    const districts = await Village.findAll({
+      attributes: [[Village.sequelize.fn('DISTINCT', Village.sequelize.col('district')), 'district']],
+      raw: true
+    });
+    res.json(districts.map(d => d.district));
   } catch (error) {
     next(error);
   }

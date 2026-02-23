@@ -18,6 +18,7 @@ const Sidebar = () => {
     { path: '/heatmap', icon: '🗺️', label: 'Heatmap', desc: 'Regional View' },
     { path: '/allocation', icon: '🚰', label: 'Allocation', desc: 'Water Supply' },
     { path: '/routes', icon: '🚛', label: 'Routes', desc: 'Optimization' },
+    { path: '/weather', icon: '🌤️', label: 'Live Weather', desc: 'Real-time Data' },
     { path: '/alerts', icon: '🔔', label: 'Alerts', desc: 'Notifications' },
   ];
 
