@@ -3,86 +3,163 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const WEATHER_API_KEY = process.env.WEATHER_API_KEY || process.env.OPENWEATHER_API_KEY;
-const WEATHER_API_BASE_URL = 'https://api.weatherapi.com/v1';
-
-/**
- * Fetch real-time weather data from WeatherAPI.com
- */
-export async function fetchCurrentWeather(latitude, longitude) {
-  if (!WEATHER_API_KEY) {
-    throw new Error('Weather API key not configured. Add WEATHER_API_KEY to .env file');
+class WeatherService {
+  constructor() {
+    this.openWeatherKey = process.env.OPENWEATHER_API_KEY;
+    this.weatherApiKey = process.env.WEATHER_API_KEY;
+    this.openWeatherBaseUrl = 'https://api.openweathermap.org/data/2.5';
+    this.weatherApiBaseUrl = 'https://api.weatherapi.com/v1';
   }
 
-  try {
-    const response = await axios.get(`${WEATHER_API_BASE_URL}/current.json`, {
-      params: {
-        key: WEATHER_API_KEY,
-        q: `${latitude},${longitude}`,
-        aqi: 'no'
+  // Fetch current weather from OpenWeatherMap
+  async fetchOpenWeatherData(city) {
+    try {
+      if (!this.openWeatherKey) {
+        throw new Error('OpenWeatherMap API key not configured');
       }
-    });
 
-    return {
-      temperature: response.data.current.temp_c,
-      humidity: response.data.current.humidity,
-      rainfall: response.data.current.precip_mm || 0, // Rainfall in mm
-      weather: response.data.current.condition.text,
-      description: response.data.current.condition.text
-    };
-  } catch (error) {
-    console.error('Error fetching weather data:', error.message);
-    throw error;
+      const response = await axios.get(`${this.openWeatherBaseUrl}/weather`, {
+        params: {
+          q: `${city},IN`,
+          appid: this.openWeatherKey,
+          units: 'metric'
+        },
+        timeout: 10000
+      });
+
+      return {
+        source: 'OpenWeatherMap',
+        city: response.data.name,
+        temperature: response.data.main.temp,
+        humidity: response.data.main.humidity,
+        pressure: response.data.main.pressure,
+        rainfall: response.data.rain?.['1h'] || 0,
+        description: response.data.weather[0].description,
+        icon: response.data.weather[0].icon,
+        windSpeed: response.data.wind.speed,
+        clouds: response.data.clouds.all,
+        timestamp: new Date(response.data.dt * 1000)
+      };
+    } catch (error) {
+      console.error('OpenWeatherMap API error:', error.message);
+      throw error;
+    }
   }
-}
 
-/**
- * Fetch weather forecast for next 5 days
- */
-export async function fetchWeatherForecast(latitude, longitude) {
-  if (!WEATHER_API_KEY) {
-    throw new Error('Weather API key not configured');
-  }
-
-  try {
-    const response = await axios.get(`${WEATHER_API_BASE_URL}/forecast.json`, {
-      params: {
-        key: WEATHER_API_KEY,
-        q: `${latitude},${longitude}`,
-        days: 5,
-        aqi: 'no'
+  // Fetch current weather from WeatherAPI.com (more reliable for India)
+  async fetchWeatherApiData(city) {
+    try {
+      if (!this.weatherApiKey) {
+        throw new Error('WeatherAPI key not configured');
       }
-    });
 
-    // Process forecast data
-    const dailyForecasts = response.data.forecast.forecastday.map(day => ({
-      date: day.date,
-      avgTemp: day.day.avgtemp_c,
-      maxTemp: day.day.maxtemp_c,
-      minTemp: day.day.mintemp_c,
-      totalRainfall: day.day.totalprecip_mm,
-      avgHumidity: day.day.avghumidity
-    }));
+      const response = await axios.get(`${this.weatherApiBaseUrl}/current.json`, {
+        params: {
+          key: this.weatherApiKey,
+          q: city,
+          aqi: 'no'
+        },
+        timeout: 10000
+      });
 
-    return dailyForecasts;
-  } catch (error) {
-    console.error('Error fetching forecast data:', error.message);
-    throw error;
+      return {
+        source: 'WeatherAPI',
+        city: response.data.location.name,
+        region: response.data.location.region,
+        temperature: response.data.current.temp_c,
+        humidity: response.data.current.humidity,
+        pressure: response.data.current.pressure_mb,
+        rainfall: response.data.current.precip_mm,
+        description: response.data.current.condition.text,
+        icon: response.data.current.condition.icon,
+        windSpeed: response.data.current.wind_kph,
+        clouds: response.data.current.cloud,
+        timestamp: new Date(response.data.current.last_updated)
+      };
+    } catch (error) {
+      console.error('WeatherAPI error:', error.message);
+      throw error;
+    }
+  }
+
+  // Fetch weather with fallback (try WeatherAPI first, then OpenWeather)
+  async fetchWeatherData(city) {
+    try {
+      // Try WeatherAPI first (better for Indian cities)
+      return await this.fetchWeatherApiData(city);
+    } catch (error) {
+      console.log('WeatherAPI failed, trying OpenWeatherMap...');
+      try {
+        return await this.fetchOpenWeatherData(city);
+      } catch (error2) {
+        throw new Error('Both weather APIs failed');
+      }
+    }
+  }
+
+  // Fetch weather for multiple villages
+  async fetchMultipleVillages(villages) {
+    const results = [];
+    
+    for (const village of villages) {
+      try {
+        const weatherData = await this.fetchWeatherData(village.name);
+        results.push({
+          villageId: village.id,
+          villageName: village.name,
+          district: village.district,
+          weather: weatherData,
+          success: true
+        });
+        
+        // Wait 1 second between requests to avoid rate limiting
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      } catch (error) {
+        results.push({
+          villageId: village.id,
+          villageName: village.name,
+          district: village.district,
+          error: error.message,
+          success: false
+        });
+      }
+    }
+    
+    return results;
+  }
+
+  // Get 5-day forecast from OpenWeatherMap
+  async fetchForecast(city) {
+    try {
+      if (!this.openWeatherKey) {
+        throw new Error('OpenWeatherMap API key not configured');
+      }
+
+      const response = await axios.get(`${this.openWeatherBaseUrl}/forecast`, {
+        params: {
+          q: `${city},IN`,
+          appid: this.openWeatherKey,
+          units: 'metric'
+        },
+        timeout: 10000
+      });
+
+      return {
+        city: response.data.city.name,
+        forecast: response.data.list.map(item => ({
+          date: new Date(item.dt * 1000),
+          temperature: item.main.temp,
+          humidity: item.main.humidity,
+          rainfall: item.rain?.['3h'] || 0,
+          description: item.weather[0].description,
+          icon: item.weather[0].icon
+        }))
+      };
+    } catch (error) {
+      console.error('Forecast API error:', error.message);
+      throw error;
+    }
   }
 }
 
-/**
- * Fetch historical weather data (requires paid API plan)
- * Alternative: Use free current data and store it over time
- */
-export async function fetchHistoricalWeather(latitude, longitude, startDate, endDate) {
-  // Note: Historical data requires WeatherAPI paid subscription
-  // For free tier, you should store current weather data daily
-  throw new Error('Historical weather data requires paid API subscription');
-}
-
-export default {
-  fetchCurrentWeather,
-  fetchWeatherForecast,
-  fetchHistoricalWeather
-};
+export default new WeatherService();

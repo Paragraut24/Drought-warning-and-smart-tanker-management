@@ -54,14 +54,23 @@ const Dashboard = () => {
     <div className="space-y-6">
       {/* Hero Section */}
       <div className="hero-section relative text-white p-12 rounded-2xl overflow-hidden shadow-2xl">
-        {/* Background Image with Overlay */}
-        <div 
-          className="absolute inset-0 bg-cover bg-center"
-          style={{
-            backgroundImage: `url('https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=1920&q=80')`,
-          }}
-        >
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-900/95 via-blue-800/90 to-purple-900/95"></div>
+        {/* Gradient Background with Pattern */}
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-900 via-blue-800 to-purple-900">
+          {/* Water wave pattern overlay */}
+          <div className="absolute inset-0 opacity-10">
+            <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <pattern id="water-pattern" x="0" y="0" width="100" height="100" patternUnits="userSpaceOnUse">
+                  <circle cx="25" cy="25" r="2" fill="white" opacity="0.3"/>
+                  <circle cx="75" cy="75" r="2" fill="white" opacity="0.3"/>
+                  <circle cx="50" cy="50" r="3" fill="white" opacity="0.2"/>
+                  <path d="M 0 50 Q 25 40, 50 50 T 100 50" stroke="white" strokeWidth="1" fill="none" opacity="0.2"/>
+                  <path d="M 0 70 Q 25 60, 50 70 T 100 70" stroke="white" strokeWidth="1" fill="none" opacity="0.15"/>
+                </pattern>
+              </defs>
+              <rect width="100%" height="100%" fill="url(#water-pattern)"/>
+            </svg>
+          </div>
           {/* Animated water drops effect */}
           <div className="absolute inset-0 opacity-20">
             <div className="absolute top-10 left-10 w-2 h-2 bg-white rounded-full animate-ping"></div>

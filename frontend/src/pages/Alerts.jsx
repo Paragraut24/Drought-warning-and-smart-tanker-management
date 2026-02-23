@@ -1,19 +1,43 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { alertAPI } from '../services/api';
 
 const Alerts = () => {
   const [alerts, setAlerts] = useState([]);
+  const [districts, setDistricts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all'); // all, critical, alert, resolved
+  const [districtFilter, setDistrictFilter] = useState('all');
+  const [message, setMessage] = useState(null);
 
   useEffect(() => {
     loadAlerts();
+    loadDistricts();
   }, []);
+
+  const loadDistricts = async () => {
+    try {
+      const response = await alertAPI.getDistricts();
+      setDistricts(response.data);
+    } catch (error) {
+      console.error('Failed to load districts:', error);
+    }
+  };
 
   const loadAlerts = async () => {
     try {
-      const response = await alertAPI.getAll();
+      const params = {};
+      if (filter !== 'all' && filter !== 'resolved') {
+        params.severity = filter;
+      }
+      if (filter === 'resolved') {
+        params.resolved = 'true';
+      }
+      if (districtFilter !== 'all') {
+        params.district = districtFilter;
+      }
+
+      const response = await alertAPI.getAll(params);
       setAlerts(response.data);
     } catch (error) {
       console.error('Failed to load alerts:', error);
@@ -22,17 +46,40 @@ const Alerts = () => {
     }
   };
 
+  useEffect(() => {
+    if (!loading) {
+      loadAlerts();
+    }
+  }, [filter, districtFilter]);
+
   const handleResolve = async (id) => {
     try {
       await alertAPI.resolve(id);
+      setMessage({ type: 'success', text: '✅ Alert marked as resolved' });
       loadAlerts();
+      setTimeout(() => setMessage(null), 3000);
     } catch (error) {
-      console.error('Failed to resolve alert:', error);
+      setMessage({ type: 'error', text: '❌ Failed to resolve alert' });
+      setTimeout(() => setMessage(null), 3000);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this alert?')) return;
+    
+    try {
+      await alertAPI.delete(id);
+      setMessage({ type: 'success', text: '✅ Alert deleted successfully' });
+      loadAlerts();
+      setTimeout(() => setMessage(null), 3000);
+    } catch (error) {
+      setMessage({ type: 'error', text: '❌ Failed to delete alert' });
+      setTimeout(() => setMessage(null), 3000);
     }
   };
 
   const filteredAlerts = alerts.filter(alert => {
-    if (filter === 'all') return true;
+    if (filter === 'all') return !alert.is_resolved;
     if (filter === 'resolved') return alert.is_resolved;
     return alert.severity === filter && !alert.is_resolved;
   });
@@ -109,23 +156,58 @@ const Alerts = () => {
       </div>
 
       {/* Filter Buttons */}
-      <div className="flex gap-3 mb-6">
-        {['all', 'critical', 'alert', 'resolved'].map((f) => (
-          <motion.button
-            key={f}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setFilter(f)}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              filter === f
-                ? 'bg-blue-600 text-white'
-                : 'bg-white text-gray-700 hover:bg-gray-100'
+      <div className="mb-6">
+        <div className="flex items-center gap-3 mb-3">
+          <span className="text-sm font-semibold text-gray-700">Filter by Severity:</span>
+          {['all', 'critical', 'alert', 'resolved'].map((f) => (
+            <motion.button
+              key={f}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setFilter(f)}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                filter === f
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+              }`}
+            >
+              {f.charAt(0).toUpperCase() + f.slice(1)}
+            </motion.button>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-3">
+          <span className="text-sm font-semibold text-gray-700">Filter by District:</span>
+          <select
+            value={districtFilter}
+            onChange={(e) => setDistrictFilter(e.target.value)}
+            className="px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+          >
+            <option value="all">All Districts</option>
+            {districts.map(d => (
+              <option key={d} value={d}>{d}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* Message Display */}
+      <AnimatePresence>
+        {message && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className={`mb-4 p-4 rounded-xl border-2 ${
+              message.type === 'success'
+                ? 'bg-green-50 border-green-200 text-green-800'
+                : 'bg-red-50 border-red-200 text-red-800'
             }`}
           >
-            {f.charAt(0).toUpperCase() + f.slice(1)}
-          </motion.button>
-        ))}
-      </div>
+            {message.text}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Alerts List */}
       <div className="space-y-4">
@@ -135,41 +217,65 @@ const Alerts = () => {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: idx * 0.05 }}
-            className={`card p-6 ${alert.is_resolved ? 'opacity-60' : ''}`}
+            className={`card p-6 border-l-4 ${
+              alert.severity === 'critical' ? 'border-red-500 bg-red-50' :
+              alert.severity === 'alert' ? 'border-yellow-500 bg-yellow-50' :
+              'border-green-500 bg-green-50'
+            } ${alert.is_resolved ? 'opacity-60' : ''}`}
           >
             <div className="flex justify-between items-start">
               <div className="flex-1">
-                <div className="flex items-center gap-3 mb-3">
+                <div className="flex items-center gap-3 mb-3 flex-wrap">
                   <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
                     alert.severity === 'critical' ? 'bg-red-500 text-white' :
                     alert.severity === 'alert' ? 'bg-yellow-500 text-white' :
                     'bg-green-500 text-white'
                   }`}>
-                    {alert.severity.toUpperCase()}
+                    {alert.severity === 'critical' ? '🚨' : alert.severity === 'alert' ? '⚠️' : '✅'} {alert.severity.toUpperCase()}
                   </span>
-                  <h3 className="text-xl font-bold text-gray-800">{alert.Village?.name || 'Unknown Village'}</h3>
-                  <span className="text-sm text-gray-500">{alert.Village?.district}</span>
+                  <h3 className="text-xl font-bold text-gray-800">
+                    {alert.Village?.name || 'Unknown Village'}
+                  </h3>
+                  <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-semibold">
+                    📍 {alert.Village?.district}
+                  </span>
                 </div>
-                <p className="text-gray-700 mb-3">{alert.message}</p>
-                <div className="flex items-center gap-4 text-sm text-gray-600">
+                <p className="text-gray-700 mb-3 text-lg">{alert.message}</p>
+                <div className="flex items-center gap-4 text-sm text-gray-600 flex-wrap">
                   {alert.wsi_score && (
-                    <span>WSI Score: <span className="font-semibold">{alert.wsi_score.toFixed(1)}</span></span>
+                    <span className="bg-white px-3 py-1 rounded-lg">
+                      WSI Score: <span className="font-semibold">{parseFloat(alert.wsi_score).toFixed(1)}</span>
+                    </span>
                   )}
-                  <span>Created: {new Date(alert.createdAt).toLocaleString('en-IN')}</span>
+                  <span className="bg-white px-3 py-1 rounded-lg">
+                    📅 {new Date(alert.createdAt).toLocaleString('en-IN')}
+                  </span>
                   {alert.is_resolved && (
-                    <span className="text-green-600 font-semibold">✓ Resolved</span>
+                    <span className="text-green-600 font-semibold bg-green-100 px-3 py-1 rounded-lg">
+                      ✓ Resolved
+                    </span>
                   )}
                 </div>
               </div>
               {!alert.is_resolved && (
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => handleResolve(alert.id)}
-                  className="btn-secondary px-4 py-2 text-sm ml-4"
-                >
-                  Mark Resolved
-                </motion.button>
+                <div className="flex gap-2 ml-4">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => handleResolve(alert.id)}
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+                  >
+                    ✓ Resolve
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => handleDelete(alert.id)}
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
+                  >
+                    🗑️ Delete
+                  </motion.button>
+                </div>
               )}
             </div>
           </motion.div>

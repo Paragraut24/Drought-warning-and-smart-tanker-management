@@ -64,9 +64,10 @@ export const tankerAPI = {
 };
 
 export const alertAPI = {
-  getAll: () => api.get('/alerts'),
+  getAll: (params) => api.get('/alerts', { params }),
   getActive: () => api.get('/alerts/active'),
   getMyVillage: () => api.get('/alerts/my-village'),
+  getDistricts: () => api.get('/alerts/districts'),
   create: (data) => api.post('/alerts', data),
   resolve: (id) => api.put(`/alerts/${id}/resolve`),
   delete: (id) => api.delete(`/alerts/${id}`)
@@ -77,6 +78,14 @@ export const reportAPI = {
   getMyReports: () => api.get('/reports/my-reports'),
   getAll: () => api.get('/reports/all'),
   updateStatus: (id, status) => api.put(`/reports/${id}/status`, { status })
+};
+
+export const weatherAPI = {
+  getVillageWeather: (villageId) => api.get(`/weather/village/${villageId}`),
+  getAllWeather: () => api.get('/weather/all'),
+  syncWeather: () => api.post('/weather/sync'),
+  getForecast: (villageId) => api.get(`/weather/forecast/${villageId}`),
+  testAPI: () => api.get('/weather/test')
 };
 
 export default api;
