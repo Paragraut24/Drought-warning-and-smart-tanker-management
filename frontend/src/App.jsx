@@ -9,6 +9,7 @@ import HeatmapView from './pages/HeatmapView';
 import AllocationPanel from './pages/AllocationPanel';
 import RouteOptimization from './pages/RouteOptimization';
 import Alerts from './pages/Alerts';
+import Weather from './pages/Weather';
 import Sidebar from './components/Sidebar';
 import LocalDashboard from './pages/local/LocalDashboard';
 import MyVillageData from './pages/local/MyVillageData';
@@ -73,6 +74,11 @@ function AppContent() {
           <Route path="/alerts" element={
             <ProtectedRoute allowedRoles={['admin']}>
               <Alerts />
+            </ProtectedRoute>
+          } />
+          <Route path="/weather" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <Weather />
             </ProtectedRoute>
           } />
 

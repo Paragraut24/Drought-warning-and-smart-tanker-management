@@ -1,5 +1,5 @@
 import express from 'express';
-import { WaterShortageReport, Village } from '../models/index.js';
+import { WaterShortageReport, Village, Alert } from '../models/index.js';
 import { authenticate, authorize } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -19,6 +19,10 @@ router.post('/water-shortage', authenticate, async (req, res, next) => {
       return res.status(403).json({ error: 'Only local users linked to a village can submit reports' });
     }
 
+    // Get village info
+    const village = await Village.findByPk(village_id);
+
+    // Create the report
     const report = await WaterShortageReport.create({
       user_id: req.user.id,
       village_id,
@@ -26,7 +30,21 @@ router.post('/water-shortage', authenticate, async (req, res, next) => {
       severity: severity || 'medium'
     });
 
-    res.status(201).json(report);
+    // Automatically create an alert for admin
+    const alertSeverity = severity === 'high' ? 'critical' : severity === 'medium' ? 'alert' : 'normal';
+    const alertMessage = `Water shortage reported by local user in ${village.name}: ${description}`;
+
+    await Alert.create({
+      village_id,
+      severity: alertSeverity,
+      message: alertMessage,
+      is_resolved: false
+    });
+
+    res.status(201).json({
+      report,
+      message: 'Report submitted successfully. An alert has been created for the admin team.'
+    });
   } catch (error) {
     next(error);
   }
