@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import { analysisAPI, villageAPI, alertAPI } from '../services/api';
-import TankerStatistics from '../components/TankerStatistics';
-import LeafletPriorityMap from '../components/LeafletPriorityMap';
 
 const Dashboard = () => {
   const [wsiData, setWsiData] = useState([]);
@@ -61,14 +59,14 @@ const Dashboard = () => {
             <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
               <defs>
                 <pattern id="water-pattern" x="0" y="0" width="100" height="100" patternUnits="userSpaceOnUse">
-                  <circle cx="25" cy="25" r="2" fill="white" opacity="0.3"/>
-                  <circle cx="75" cy="75" r="2" fill="white" opacity="0.3"/>
-                  <circle cx="50" cy="50" r="3" fill="white" opacity="0.2"/>
-                  <path d="M 0 50 Q 25 40, 50 50 T 100 50" stroke="white" strokeWidth="1" fill="none" opacity="0.2"/>
-                  <path d="M 0 70 Q 25 60, 50 70 T 100 70" stroke="white" strokeWidth="1" fill="none" opacity="0.15"/>
+                  <circle cx="25" cy="25" r="2" fill="white" opacity="0.3" />
+                  <circle cx="75" cy="75" r="2" fill="white" opacity="0.3" />
+                  <circle cx="50" cy="50" r="3" fill="white" opacity="0.2" />
+                  <path d="M 0 50 Q 25 40, 50 50 T 100 50" stroke="white" strokeWidth="1" fill="none" opacity="0.2" />
+                  <path d="M 0 70 Q 25 60, 50 70 T 100 70" stroke="white" strokeWidth="1" fill="none" opacity="0.15" />
                 </pattern>
               </defs>
-              <rect width="100%" height="100%" fill="url(#water-pattern)"/>
+              <rect width="100%" height="100%" fill="url(#water-pattern)" />
             </svg>
           </div>
           {/* Animated water drops effect */}
@@ -79,14 +77,14 @@ const Dashboard = () => {
             <div className="absolute top-1/3 right-1/3 w-2 h-2 bg-blue-200 rounded-full animate-pulse" style={{ animationDelay: '2s' }}></div>
           </div>
         </div>
-        
+
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="relative z-10"
         >
           <div className="flex items-center gap-4 mb-6">
-            <motion.div 
+            <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.2, type: 'spring' }}
@@ -95,7 +93,7 @@ const Dashboard = () => {
               <span className="text-5xl">💧</span>
             </motion.div>
             <div>
-              <motion.h1 
+              <motion.h1
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.3 }}
@@ -103,7 +101,7 @@ const Dashboard = () => {
               >
                 JalRakshak AI Dashboard
               </motion.h1>
-              <motion.p 
+              <motion.p
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.4 }}
@@ -113,8 +111,8 @@ const Dashboard = () => {
               </motion.p>
             </div>
           </div>
-          
-          <motion.p 
+
+          <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
@@ -122,9 +120,9 @@ const Dashboard = () => {
           >
             Real-time water crisis monitoring for Vidarbha region
           </motion.p>
-          
+
           <div className="flex flex-wrap gap-4 text-sm">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6 }}
@@ -133,8 +131,8 @@ const Dashboard = () => {
               <span className="w-3 h-3 bg-green-400 rounded-full animate-pulse shadow-lg shadow-green-400/50"></span>
               <span className="font-semibold">Live Monitoring Active</span>
             </motion.div>
-            
-            <motion.div 
+
+            <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.7 }}
@@ -143,8 +141,8 @@ const Dashboard = () => {
               <span className="text-xl">🌡️</span>
               <span className="font-semibold">Drought Detection Enabled</span>
             </motion.div>
-            
-            <motion.div 
+
+            <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.8 }}
@@ -155,7 +153,7 @@ const Dashboard = () => {
             </motion.div>
           </div>
         </motion.div>
-        
+
         {/* Wave separator */}
         <div className="hero-wave"></div>
       </div>
@@ -163,35 +161,35 @@ const Dashboard = () => {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {[
-          { 
-            label: 'Total Villages', 
+          {
+            label: 'Total Villages',
             sublabel: 'कुल गाँव',
-            value: stats.total, 
-            gradient: 'from-blue-500 to-blue-600', 
+            value: stats.total,
+            gradient: 'from-blue-500 to-blue-600',
             icon: '🏘️',
             desc: 'Vidarbha Region'
           },
-          { 
-            label: 'Critical Status', 
+          {
+            label: 'Critical Status',
             sublabel: 'गंभीर स्थिति',
-            value: stats.critical, 
-            gradient: 'from-red-500 to-red-600', 
+            value: stats.critical,
+            gradient: 'from-red-500 to-red-600',
             icon: '🚨',
             desc: 'Immediate Action'
           },
-          { 
-            label: 'Alert Status', 
+          {
+            label: 'Alert Status',
             sublabel: 'चेतावनी',
-            value: stats.alert, 
-            gradient: 'from-yellow-500 to-yellow-600', 
+            value: stats.alert,
+            gradient: 'from-yellow-500 to-yellow-600',
             icon: '⚠️',
             desc: 'Monitor Closely'
           },
-          { 
-            label: 'Normal Status', 
+          {
+            label: 'Normal Status',
             sublabel: 'सामान्य',
-            value: stats.normal, 
-            gradient: 'from-green-500 to-green-600', 
+            value: stats.normal,
+            gradient: 'from-green-500 to-green-600',
             icon: '✅',
             desc: 'Stable Supply'
           }
@@ -247,35 +245,35 @@ const Dashboard = () => {
             <AreaChart data={wsiData.slice(0, 8)}>
               <defs>
                 <linearGradient id="colorWSI" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#ef4444" stopOpacity={0.8}/>
-                  <stop offset="95%" stopColor="#ef4444" stopOpacity={0.1}/>
+                  <stop offset="5%" stopColor="#ef4444" stopOpacity={0.8} />
+                  <stop offset="95%" stopColor="#ef4444" stopOpacity={0.1} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-              <XAxis 
-                dataKey="villageName" 
-                stroke="#64748b" 
+              <XAxis
+                dataKey="villageName"
+                stroke="#64748b"
                 fontSize={12}
                 angle={-45}
                 textAnchor="end"
                 height={80}
               />
               <YAxis stroke="#64748b" />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: 'white', 
-                  border: 'none', 
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: 'white',
+                  border: 'none',
                   borderRadius: '8px',
                   boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
                 }}
               />
-              <Area 
-                type="monotone" 
-                dataKey="wsi" 
-                stroke="#ef4444" 
+              <Area
+                type="monotone"
+                dataKey="wsi"
+                stroke="#ef4444"
                 strokeWidth={3}
-                fillOpacity={1} 
-                fill="url(#colorWSI)" 
+                fillOpacity={1}
+                fill="url(#colorWSI)"
               />
             </AreaChart>
           </ResponsiveContainer>
@@ -358,13 +356,12 @@ const Dashboard = () => {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: idx * 0.05 }}
               whileHover={{ scale: 1.02 }}
-              className={`p-4 rounded-xl border-l-4 ${
-                alert.severity === 'critical' 
-                  ? 'bg-red-50 border-red-500' 
-                  : alert.severity === 'alert' 
-                  ? 'bg-yellow-50 border-yellow-500' 
-                  : 'bg-green-50 border-green-500'
-              }`}
+              className={`p-4 rounded-xl border-l-4 ${alert.severity === 'critical'
+                  ? 'bg-red-50 border-red-500'
+                  : alert.severity === 'alert'
+                    ? 'bg-yellow-50 border-yellow-500'
+                    : 'bg-green-50 border-green-500'
+                }`}
             >
               <div className="flex items-start justify-between mb-2">
                 <div>
@@ -380,11 +377,10 @@ const Dashboard = () => {
                 <span className="text-gray-500">
                   {new Date(alert.createdAt).toLocaleDateString('en-IN')}
                 </span>
-                <span className={`px-2 py-1 rounded ${
-                  alert.severity === 'critical' ? 'bg-red-200 text-red-800' : 
-                  alert.severity === 'alert' ? 'bg-yellow-200 text-yellow-800' : 
-                  'bg-green-200 text-green-800'
-                }`}>
+                <span className={`px-2 py-1 rounded ${alert.severity === 'critical' ? 'bg-red-200 text-red-800' :
+                    alert.severity === 'alert' ? 'bg-yellow-200 text-yellow-800' :
+                      'bg-green-200 text-green-800'
+                  }`}>
                   {alert.severity.toUpperCase()}
                 </span>
               </div>
@@ -411,32 +407,14 @@ const Dashboard = () => {
           <div>
             <h3 className="font-bold text-lg mb-1">JalRakshak AI - Powered by Machine Learning</h3>
             <p className="text-sm opacity-90">
-              Using advanced algorithms to predict water demand, optimize tanker routes, and prevent water crises in Vidarbha region. 
+              Using advanced algorithms to predict water demand, optimize tanker routes, and prevent water crises in Vidarbha region.
               Real-time monitoring of {stats.total} villages with AI-driven drought detection.
             </p>
           </div>
         </div>
       </motion.div>
 
-      {/* Tanker Statistics Section */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-      >
-        <div className="mb-4">
-          <h2 className="text-2xl font-bold text-gray-800">Tanker Deployment Status</h2>
-          <p className="text-sm text-gray-500">टैंकर तैनाती स्थिति - Real-time Tracking</p>
-        </div>
-        <TankerStatistics />
-      </motion.div>
 
-      {/* Priority Map Section */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-      >
-        <LeafletPriorityMap />
-      </motion.div>
     </div>
   );
 };
