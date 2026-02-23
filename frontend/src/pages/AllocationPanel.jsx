@@ -87,10 +87,14 @@ const AllocationPanel = () => {
       {/* Loading State */}
       {pageLoading ? (
         <div className="flex items-center justify-center h-screen">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading allocation data...</p>
-          </div>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-center glass-card p-8"
+          >
+            <div className="spinner mx-auto mb-4"></div>
+            <p className="text-gray-700 font-medium">Loading allocation data...</p>
+          </motion.div>
         </div>
       ) : (
         <>
@@ -98,74 +102,106 @@ const AllocationPanel = () => {
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-8"
+            transition={{ duration: 0.6 }}
+            className="mb-8 glass-card p-6"
           >
-            <h1 className="text-4xl font-bold text-gray-800 mb-2">Water Tanker Allocation</h1>
-            <p className="text-gray-600">पानी टैंकर आवंटन - AI-powered smart allocation for critical villages</p>
+            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
+              Water Tanker Allocation
+            </h1>
+            <p className="text-gray-600 text-sm md:text-base">पानी टैंकर आवंटन - AI-powered smart allocation for critical villages</p>
           </motion.div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="card p-6 bg-gradient-to-br from-blue-50 to-blue-100"
+          whileHover={{ scale: 1.05, y: -5 }}
+          transition={{ duration: 0.3 }}
+          className="glass-card p-6 bg-gradient-to-br from-blue-50 to-blue-100"
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 text-sm mb-1">Total Tankers</p>
-              <p className="text-3xl font-bold text-blue-600">{tankers.length}</p>
+              <p className="text-gray-600 text-xs md:text-sm mb-1">Total Tankers</p>
+              <p className="text-3xl md:text-4xl font-bold text-blue-600">{tankers.length}</p>
             </div>
-            <span className="text-4xl">🚛</span>
+            <motion.span 
+              className="text-4xl md:text-5xl"
+              animate={{ rotate: [0, 10, -10, 0] }}
+              transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+            >
+              🚛
+            </motion.span>
           </div>
         </motion.div>
 
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.1 }}
-          className="card p-6 bg-gradient-to-br from-green-50 to-green-100"
+          whileHover={{ scale: 1.05, y: -5 }}
+          transition={{ delay: 0.1, duration: 0.3 }}
+          className="glass-card p-6 bg-gradient-to-br from-green-50 to-green-100"
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 text-sm mb-1">Available</p>
-              <p className="text-3xl font-bold text-green-600">
+              <p className="text-gray-600 text-xs md:text-sm mb-1">Available</p>
+              <p className="text-3xl md:text-4xl font-bold text-green-600">
                 {tankers.filter(t => t.status === 'available').length}
               </p>
             </div>
-            <span className="text-4xl">✅</span>
+            <motion.span 
+              className="text-4xl md:text-5xl"
+              animate={{ scale: [1, 1.2, 1] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              ✅
+            </motion.span>
           </div>
         </motion.div>
 
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.2 }}
-          className="card p-6 bg-gradient-to-br from-purple-50 to-purple-100"
+          whileHover={{ scale: 1.05, y: -5 }}
+          transition={{ delay: 0.2, duration: 0.3 }}
+          className="glass-card p-6 bg-gradient-to-br from-purple-50 to-purple-100"
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 text-sm mb-1">Active Allocations</p>
-              <p className="text-3xl font-bold text-purple-600">{allocations.length}</p>
+              <p className="text-gray-600 text-xs md:text-sm mb-1">Active Allocations</p>
+              <p className="text-3xl md:text-4xl font-bold text-purple-600">{allocations.length}</p>
             </div>
-            <span className="text-4xl">📍</span>
+            <motion.span 
+              className="text-4xl md:text-5xl"
+              animate={{ y: [0, -10, 0] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              📍
+            </motion.span>
           </div>
         </motion.div>
 
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.3 }}
-          className="card p-6 bg-gradient-to-br from-yellow-50 to-yellow-100"
+          whileHover={{ scale: 1.05, y: -5 }}
+          transition={{ delay: 0.3, duration: 0.3 }}
+          className="glass-card p-6 bg-gradient-to-br from-yellow-50 to-yellow-100"
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 text-sm mb-1">In Progress</p>
-              <p className="text-3xl font-bold text-yellow-600">
+              <p className="text-gray-600 text-xs md:text-sm mb-1">In Progress</p>
+              <p className="text-3xl md:text-4xl font-bold text-yellow-600">
                 {allocations.filter(a => a.status === 'in_progress').length}
               </p>
             </div>
-            <span className="text-4xl">⏳</span>
+            <motion.span 
+              className="text-4xl md:text-5xl"
+              animate={{ rotate: 360 }}
+              transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+            >
+              ⏳
+            </motion.span>
           </div>
         </motion.div>
       </div>
@@ -295,40 +331,79 @@ const AllocationPanel = () => {
 
       {/* Custom Confirmation Dialog */}
       {showConfirm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+        >
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-xl p-6 max-w-md mx-4 shadow-2xl"
+            initial={{ opacity: 0, scale: 0.8, y: 50 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: 50 }}
+            transition={{ type: "spring", duration: 0.5 }}
+            className="glass-card max-w-md w-full mx-4 p-6 md:p-8"
           >
             <div className="text-center">
-              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-3xl">⚠️</span>
-              </div>
-              <h3 className="text-xl font-bold text-gray-800 mb-2">Cancel Allocation?</h3>
-              <p className="text-gray-600 mb-6">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.2, type: "spring" }}
+                className="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-red-100 to-red-200 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg"
+              >
+                <motion.span
+                  animate={{ rotate: [0, 10, -10, 0] }}
+                  transition={{ duration: 0.5, repeat: 3 }}
+                  className="text-3xl md:text-4xl"
+                >
+                  ⚠️
+                </motion.span>
+              </motion.div>
+              <motion.h3
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="text-xl md:text-2xl font-bold text-gray-800 mb-2"
+              >
+                Cancel Allocation?
+              </motion.h3>
+              <motion.p
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="text-gray-600 mb-6 text-sm md:text-base"
+              >
                 Are you sure you want to cancel this tanker allocation? This action will delete the entry and free up the tanker.
-              </p>
-              <div className="flex gap-3">
-                <button
+              </motion.p>
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                className="flex flex-col sm:flex-row gap-3"
+              >
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={() => {
                     setShowConfirm(false);
                     setAllocationToCancel(null);
                   }}
-                  className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+                  className="flex-1 px-4 py-3 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition-all font-medium shadow-md"
                 >
                   No, Keep It
-                </button>
-                <button
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={confirmCancel}
-                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+                  className="flex-1 px-4 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl hover:from-red-600 hover:to-red-700 transition-all font-medium shadow-lg"
                 >
                   Yes, Cancel
-                </button>
-              </div>
+                </motion.button>
+              </motion.div>
             </div>
           </motion.div>
-        </div>
+        </motion.div>
       )}
         </>
       )}
