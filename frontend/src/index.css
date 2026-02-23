@@ -17,10 +17,20 @@ body {
 }
 
 .hero-section {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.9), rgba(147, 51, 234, 0.9)),
-              url('https://images.unsplash.com/photo-1581094271901-8022df4466f9?w=1920') center/cover;
-  min-height: 500px;
+  min-height: 400px;
   position: relative;
+  overflow: hidden;
+}
+
+.hero-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(147, 51, 234, 0.1));
+  pointer-events: none;
 }
 
 .hero-wave {

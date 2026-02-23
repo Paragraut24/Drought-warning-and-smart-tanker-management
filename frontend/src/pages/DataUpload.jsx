@@ -37,25 +37,30 @@ const DataUpload = () => {
         record_date: formData.record_date,
         ...(dataType === 'rainfall' 
           ? { rainfall_mm: parseFloat(formData.rainfall_mm), is_historical: formData.is_historical }
-          : { water_level: parseFloat(formData.water_level) }
+          : { water_level: parseFloat(formData.water_level), quality_index: 75 }
         )
       };
 
       if (dataType === 'rainfall') {
         await dataAPI.addRainfall(data);
+        setMessage('✅ Rainfall data uploaded successfully!');
       } else {
         await dataAPI.addGroundwater(data);
+        setMessage('✅ Groundwater data uploaded successfully!');
       }
 
-      setMessage('Data uploaded successfully!');
+      // Reset form
       setFormData({
         rainfall_mm: '',
         water_level: '',
         record_date: new Date().toISOString().split('T')[0],
         is_historical: false
       });
+      setSelectedVillage('');
     } catch (error) {
-      setMessage('Upload failed: ' + (error.response?.data?.error || error.message));
+      console.error('Upload error:', error);
+      const errorMsg = error.response?.data?.error || error.message || 'Upload failed';
+      setMessage(`❌ Upload failed: ${errorMsg}`);
     }
   };
 
